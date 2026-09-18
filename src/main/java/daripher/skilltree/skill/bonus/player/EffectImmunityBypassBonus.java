@@ -2,6 +2,7 @@ package daripher.skilltree.skill.bonus.player;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
+import net.minecraft.core.Holder;
 import daripher.skilltree.client.tooltip.TooltipHelper;
 import daripher.skilltree.client.widget.editor.SkillTreeEditor;
 import daripher.skilltree.data.serializers.SerializationHelper;
@@ -35,7 +36,7 @@ public final class EffectImmunityBypassBonus implements SkillBonus<EffectImmunit
         this.effectPredicate = effectPredicate;
     }
 
-    public boolean shouldIgnoreEffectImmunity(MobEffect mobEffect, @Nullable Player effectSource, LivingEntity entity) {
+    public boolean shouldIgnoreEffectImmunity(Holder<MobEffect> mobEffect, @Nullable Player effectSource, LivingEntity entity) {
         if (!effectPredicate.test(mobEffect)) {
             return false;
         }

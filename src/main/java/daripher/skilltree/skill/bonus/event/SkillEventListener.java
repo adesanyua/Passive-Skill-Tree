@@ -12,7 +12,7 @@ import java.util.function.Consumer;
 
 public interface SkillEventListener {
     default String getDescriptionId() {
-        ResourceLocation id = PSTRegistries.EVENT_LISTENERS.get().getKey(getSerializer());
+        ResourceLocation id = PSTRegistries.EVENT_LISTENERS.getKey(getSerializer());
         Objects.requireNonNull(id);
         return "event_listener.%s.%s".formatted(id.getNamespace(), id.getPath());
     }

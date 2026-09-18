@@ -19,9 +19,9 @@ import net.minecraft.stats.StatsCounter;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
-import net.minecraftforge.registries.ForgeRegistries;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.api.distmarker.OnlyIn;
+import net.minecraft.core.registries.BuiltInRegistries;
 
 import javax.annotation.Nonnull;
 import java.util.Objects;
@@ -41,7 +41,7 @@ public final class StatRequirement implements SkillRequirement<StatRequirement> 
 
     @Override
     public boolean test(Player player) {
-        StatType<?> statType = ForgeRegistries.STAT_TYPES.getValue(statTypeId);
+        StatType<?> statType = BuiltInRegistries.STAT_TYPE.get(statTypeId);
         Objects.requireNonNull(statType);
         int statValue = getStatValue(player, statType);
         return statValue >= minValue;
@@ -49,7 +49,7 @@ public final class StatRequirement implements SkillRequirement<StatRequirement> 
 
     @Override
     public MutableComponent getTooltip() {
-        StatType<?> statType = ForgeRegistries.STAT_TYPES.getValue(statTypeId);
+        StatType<?> statType = BuiltInRegistries.STAT_TYPE.get(statTypeId);
         if (statType == null) {
             return Component.literal("Unknown stat type: " + statTypeId).withStyle(ChatFormatting.RED);
         }
@@ -65,7 +65,7 @@ public final class StatRequirement implements SkillRequirement<StatRequirement> 
             return Component.literal(statName.getString() + ": " + formattedMinValue);
         }
         if (statType == Stats.ENTITY_KILLED) {
-            EntityType<?> entityType = ForgeRegistries.ENTITY_TYPES.getValue(statId);
+            EntityType<?> entityType = BuiltInRegistries.ENTITY_TYPE.get(statId);
             if (entityType == null) {
                 return Component.literal("Unknown entity: " + statId).withStyle(ChatFormatting.RED);
             }
@@ -73,14 +73,14 @@ public final class StatRequirement implements SkillRequirement<StatRequirement> 
             return Component.translatable(getDescriptionId() + ".killed", minValue, entityName);
         }
         if (statType == Stats.ENTITY_KILLED_BY) {
-            EntityType<?> entityType = ForgeRegistries.ENTITY_TYPES.getValue(statId);
+            EntityType<?> entityType = BuiltInRegistries.ENTITY_TYPE.get(statId);
             if (entityType == null) {
                 return Component.literal("Unknown entity: " + statId).withStyle(ChatFormatting.RED);
             }
             Component entityName = entityType.getDescription();
             return Component.translatable(getDescriptionId() + ".killed_by", entityName, minValue);
         } else {
-            Item item = ForgeRegistries.ITEMS.getValue(statId);
+            Item item = BuiltInRegistries.ITEM.get(statId);
             if (item == null) {
                 return Component.literal("Unknown item: " + statId).withStyle(ChatFormatting.RED);
             }
@@ -122,13 +122,13 @@ public final class StatRequirement implements SkillRequirement<StatRequirement> 
     public void addEditorWidgets(SkillTreeEditor editor, Consumer<StatRequirement> consumer) {
         editor.addLabel(0, 0, "Stat Type", ChatFormatting.GOLD);
         editor.increaseHeight(19);
-        Set<ResourceLocation> statTypeIds = ForgeRegistries.STAT_TYPES.getKeys();
+        Set<ResourceLocation> statTypeIds = BuiltInRegistries.STAT_TYPE.keySet();
         editor.addSelectionMenu(0, 0, 200, statTypeIds).setValue(getStatTypeId()).setElementNameGetter(v -> Component.literal(v.toString()))
                 .setResponder(v -> selectStatType(consumer, v));
         editor.increaseHeight(19);
         editor.addLabel(0, 0, "Stat", ChatFormatting.GOLD);
         editor.increaseHeight(19);
-        StatType<?> statType = ForgeRegistries.STAT_TYPES.getValue(getStatTypeId());
+        StatType<?> statType = BuiltInRegistries.STAT_TYPE.get(getStatTypeId());
         Objects.requireNonNull(statType);
         Set<ResourceLocation> statIds = statType.getRegistry().keySet();
         editor.addSelectionMenu(0, 0, 200, statIds).setValue(getStatId()).setElementNameGetter(v -> Component.literal(v.toString()))
@@ -153,7 +153,7 @@ public final class StatRequirement implements SkillRequirement<StatRequirement> 
 
     private void selectStatType(Consumer<StatRequirement> consumer, ResourceLocation statTypeId) {
         setStatTypeId(statTypeId);
-        StatType<?> statType = ForgeRegistries.STAT_TYPES.getValue(getStatTypeId());
+        StatType<?> statType = BuiltInRegistries.STAT_TYPE.get(getStatTypeId());
         Objects.requireNonNull(statType);
         Set<ResourceLocation> statIds = statType.getRegistry().keySet();
         statIds.stream().findFirst().ifPresent(this::setStatId);
@@ -263,7 +263,7 @@ public final class StatRequirement implements SkillRequirement<StatRequirement> 
 
         @Override
         public SkillRequirement<?> createDefaultInstance() {
-            return new StatRequirement(ForgeRegistries.STAT_TYPES.getKey(Stats.CUSTOM), Stats.DEATHS, 1);
+            return new StatRequirement(BuiltInRegistries.STAT_TYPE.getKey(Stats.CUSTOM), Stats.DEATHS, 1);
         }
     }
 }

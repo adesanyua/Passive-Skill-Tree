@@ -38,7 +38,7 @@ public interface SkillBonus<T extends SkillBonus<T>> extends Comparable<SkillBon
     Serializer getSerializer();
 
     default String getDescriptionId() {
-        ResourceLocation id = PSTRegistries.SKILL_BONUSES.get().getKey(getSerializer());
+        ResourceLocation id = PSTRegistries.SKILL_BONUSES.getKey(getSerializer());
         Objects.requireNonNull(id);
         return "skill_bonus.%s.%s".formatted(id.getNamespace(), id.getPath());
     }

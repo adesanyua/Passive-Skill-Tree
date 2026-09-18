@@ -569,8 +569,9 @@ public class PSTEnglishTranslationProvider extends PSTTranslationProvider {
     }
 
     protected void add(Potion potion, String name) {
-        add(potion.getName(Items.POTION.getDescriptionId() + ".effect."), "Potion of " + name);
-        add(potion.getName(Items.SPLASH_POTION.getDescriptionId() + ".effect."), "Splash Potion of " + name);
-        add(potion.getName(Items.LINGERING_POTION.getDescriptionId() + ".effect."), "Lingering Potion of " + name);
+        var potionHolder = net.minecraft.core.registries.BuiltInRegistries.POTION.wrapAsHolder(potion);
+        add(Potion.getName(java.util.Optional.of(potionHolder), Items.POTION.getDescriptionId() + ".effect."), "Potion of " + name);
+        add(Potion.getName(java.util.Optional.of(potionHolder), Items.SPLASH_POTION.getDescriptionId() + ".effect."), "Splash Potion of " + name);
+        add(Potion.getName(java.util.Optional.of(potionHolder), Items.LINGERING_POTION.getDescriptionId() + ".effect."), "Lingering Potion of " + name);
     }
 }

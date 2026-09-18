@@ -3,30 +3,30 @@ package daripher.skilltree.skill.bonus.handler;
 import daripher.skilltree.SkillTreeMod;
 import daripher.skilltree.skill.SkillBonusProvider;
 import daripher.skilltree.skill.bonus.player.EffectImmunityBypassBonus;
+import net.minecraft.core.Holder;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
-import net.minecraftforge.event.entity.living.MobEffectEvent;
-import net.minecraftforge.eventbus.api.Event;
-import net.minecraftforge.eventbus.api.EventPriority;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
+import net.neoforged.neoforge.event.entity.living.MobEffectEvent;
+import net.neoforged.bus.api.EventPriority;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
 
 import java.util.List;
 
-@Mod.EventBusSubscriber(modid = SkillTreeMod.MOD_ID)
+@EventBusSubscriber(modid = SkillTreeMod.MOD_ID)
 public class EffectImmunityBypassBonusHandler {
-    @SubscribeEvent(priority = EventPriority.LOWEST, receiveCanceled = true)
+    @SubscribeEvent(priority = EventPriority.LOWEST)
     public static void bypassEffectImmunity(MobEffectEvent.Applicable event) {
         LivingEntity affectedEntity = event.getEntity();
         if (!(affectedEntity.getKillCredit() instanceof Player effectSource)) {
             return;
         }
         List<EffectImmunityBypassBonus> skillBonuses = SkillBonusProvider.getSkillBonuses(effectSource, EffectImmunityBypassBonus.class);
-        MobEffect mobEffect = event.getEffectInstance().getEffect();
+        Holder<MobEffect> mobEffect = event.getEffectInstance().getEffect();
         for (EffectImmunityBypassBonus skillBonus : skillBonuses) {
             if (skillBonus.shouldIgnoreEffectImmunity(mobEffect, effectSource, affectedEntity)) {
-                event.setResult(Event.Result.ALLOW);
+                event.setResult(MobEffectEvent.Applicable.Result.APPLY);
                 return;
             }
         }

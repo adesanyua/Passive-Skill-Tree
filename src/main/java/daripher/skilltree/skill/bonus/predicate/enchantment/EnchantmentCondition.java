@@ -2,15 +2,16 @@ package daripher.skilltree.skill.bonus.predicate.enchantment;
 
 import daripher.skilltree.init.PSTRegistries;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.item.enchantment.EnchantmentCategory;
+import net.minecraft.tags.TagKey;
+import net.minecraft.world.item.Item;
 
 import java.util.Objects;
 
 public interface EnchantmentCondition {
-    boolean met(EnchantmentCategory category);
+    boolean met(TagKey<Item> supportedItems);
 
     default String getDescriptionId() {
-        ResourceLocation id = PSTRegistries.ENCHANTMENT_CONDITIONS.get().getKey(getSerializer());
+        ResourceLocation id = PSTRegistries.ENCHANTMENT_CONDITIONS.getKey(getSerializer());
         Objects.requireNonNull(id);
         return "enchantment_condition.%s.%s".formatted(id.getNamespace(), id.getPath());
     }

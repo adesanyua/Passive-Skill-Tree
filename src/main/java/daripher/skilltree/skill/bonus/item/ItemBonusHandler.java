@@ -7,6 +7,8 @@ import daripher.skilltree.init.PSTRegistries;
 import daripher.skilltree.skill.SkillBonusProvider;
 import daripher.skilltree.skill.bonus.player.AttributeBonus;
 import daripher.skilltree.skill.bonus.player.ItemUpgradeLimitBonusesBonus;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.world.item.component.CustomData;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
@@ -18,10 +20,11 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.event.entity.living.LivingEquipmentChangeEvent;
-import net.minecraftforge.event.entity.player.ItemTooltipEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
+import net.neoforged.neoforge.event.entity.living.LivingEquipmentChangeEvent;
+import net.neoforged.neoforge.event.entity.player.ItemTooltipEvent;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.fml.common.Mod;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -30,7 +33,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-@Mod.EventBusSubscriber(modid = SkillTreeMod.MOD_ID, bus = Mod.EventBusSubscriber.Bus.FORGE)
+@EventBusSubscriber(modid = SkillTreeMod.MOD_ID, bus = EventBusSubscriber.Bus.GAME)
 public class ItemBonusHandler {
     public static final String UPGRADE_BONUSES_TAG_NAME = "UpgradeBonuses";
     public static final String CRAFTING_BONUSES_TAG_NAME = "CraftingBonuses";
@@ -67,7 +70,7 @@ public class ItemBonusHandler {
             if (attributeInstance == null) {
                 continue;
             }
-            attributeInstance.removeModifier(attributeBonus.getModifier().getId());
+            attributeInstance.removeModifier(attributeBonus.getModifier().id());
         }
         for (ItemBonus<?> itemBonus : getItemBonuses(event.getTo(), EquipmentBonus.class)) {
             EquipmentBonus bonus = (EquipmentBonus) itemBonus;
@@ -81,7 +84,7 @@ public class ItemBonusHandler {
             if (attributeInstance == null) {
                 continue;
             }
-            if (attributeInstance.hasModifier(attributeBonus.getModifier())) {
+            if (attributeInstance.hasModifier(attributeBonus.getModifier().id())) {
                 continue;
             }
             attributeInstance.addTransientModifier(attributeBonus.getModifier());
@@ -95,7 +98,7 @@ public class ItemBonusHandler {
     }
 
     public static List<ItemBonus<?>> getItemBonuses(ItemStack itemStack) {
-        if (!itemStack.hasTag()) {
+        if (!itemStack.has(DataComponents.CUSTOM_DATA)) {
             return ImmutableList.of();
         }
         List<ItemBonus<?>> list = new ArrayList<>();
@@ -113,13 +116,14 @@ public class ItemBonusHandler {
     }
 
     private static List<ItemBonus<?>> getBonusesFromTag(ItemStack itemStack, String subTagName) {
-        CompoundTag stackTag = itemStack.getOrCreateTag();
+        CompoundTag stackTag = itemStack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY).copyTag();
         List<ItemBonus<?>> itemBonuses = new ArrayList<>();
         if (!stackTag.contains(subTagName, Tag.TAG_LIST)) {
             return new ArrayList<>();
         }
         ListTag bonusesTagList = stackTag.getList(subTagName, Tag.TAG_COMPOUND);
-        bonusesTagList.stream().map(CompoundTag.class::cast).forEach(bonusTag -> itemBonuses.add(deserializeBonus(bonusTag)));
+        bonusesTagList.stream().map(CompoundTag.class::cast).map(ItemBonusHandler::deserializeBonus)
+                .filter(Objects::nonNull).forEach(itemBonuses::add);
         return itemBonuses;
     }
 
@@ -161,13 +165,19 @@ public class ItemBonusHandler {
         for (ItemBonus<?> itemBonus : bonuses) {
             bonusesTagList.add(serializeBonus(itemBonus));
         }
-        stack.getOrCreateTag().put(tagName, bonusesTagList);
+        CustomData.update(DataComponents.CUSTOM_DATA, stack, stackTag -> {
+            if (bonusesTagList.isEmpty()) {
+                stackTag.remove(tagName);
+            } else {
+                stackTag.put(tagName, bonusesTagList);
+            }
+        });
     }
 
     private static CompoundTag serializeBonus(ItemBonus<? extends ItemBonus<?>> bonus) {
         ItemBonus.Serializer serializer = bonus.getSerializer();
         CompoundTag bonusTag = serializer.serialize(bonus);
-        ResourceLocation id = PSTRegistries.ITEM_BONUSES.get().getKey(serializer);
+        ResourceLocation id = PSTRegistries.ITEM_BONUSES.getKey(serializer);
         bonusTag.putString("type", Objects.requireNonNull(id).toString());
         return bonusTag;
     }
@@ -177,7 +187,7 @@ public class ItemBonusHandler {
             return null;
         }
         ResourceLocation id = ResourceLocation.parse(tag.getString("type"));
-        ItemBonus.Serializer serializer = PSTRegistries.ITEM_BONUSES.get().getValue(id);
+        ItemBonus.Serializer serializer = PSTRegistries.ITEM_BONUSES.get(id);
         if (serializer == null) {
             return null;
         }

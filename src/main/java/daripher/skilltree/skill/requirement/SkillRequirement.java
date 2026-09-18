@@ -20,7 +20,7 @@ public interface SkillRequirement<T extends SkillRequirement<T>> extends Predica
     T copy();
 
     default String getDescriptionId() {
-        ResourceLocation id = PSTRegistries.SKILL_REQUIREMENTS.get().getKey(getSerializer());
+        ResourceLocation id = PSTRegistries.SKILL_REQUIREMENTS.getKey(getSerializer());
         Objects.requireNonNull(id);
         return "skill_requirements.%s.%s".formatted(id.getNamespace(), id.getPath());
     }

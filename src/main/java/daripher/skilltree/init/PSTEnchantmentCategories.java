@@ -1,11 +1,16 @@
 package daripher.skilltree.init;
 
-import daripher.skilltree.skill.bonus.predicate.item.EquipmentPredicate;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.PotionItem;
-import net.minecraft.world.item.enchantment.EnchantmentCategory;
+import daripher.skilltree.SkillTreeMod;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.tags.ItemTags;
+import net.minecraft.tags.TagKey;
+import net.minecraft.world.item.Item;
 
 public class PSTEnchantmentCategories {
-    public static EnchantmentCategory SHIELD = EnchantmentCategory.create("shield", item -> EquipmentPredicate.isShield(new ItemStack(item)));
-    public static EnchantmentCategory POTION = EnchantmentCategory.create("potion", item -> item instanceof PotionItem);
+    public static final TagKey<Item> SHIELD = create("enchantable/shield");
+    public static final TagKey<Item> POTION = create("enchantable/potion");
+
+    private static TagKey<Item> create(String path) {
+        return ItemTags.create(ResourceLocation.fromNamespaceAndPath(SkillTreeMod.MOD_ID, path));
+    }
 }

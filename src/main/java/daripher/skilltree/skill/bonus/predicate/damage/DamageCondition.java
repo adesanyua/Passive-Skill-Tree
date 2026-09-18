@@ -13,7 +13,7 @@ public interface DamageCondition {
     boolean met(DamageSource source);
 
     default String getDescriptionId() {
-        ResourceLocation id = PSTRegistries.DAMAGE_CONDITIONS.get().getKey(getSerializer());
+        ResourceLocation id = PSTRegistries.DAMAGE_CONDITIONS.getKey(getSerializer());
         Objects.requireNonNull(id);
         return "damage_condition.%s.%s".formatted(id.getNamespace(), id.getPath());
     }

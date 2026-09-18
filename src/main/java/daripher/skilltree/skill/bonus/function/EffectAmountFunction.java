@@ -8,6 +8,7 @@ import daripher.skilltree.skill.bonus.SkillBonus;
 import daripher.skilltree.skill.bonus.predicate.effect.MobEffectType;
 import daripher.skilltree.skill.bonus.predicate.living.FloatFunctionEntityPredicate;
 import net.minecraft.ChatFormatting;
+import net.minecraft.core.Holder;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
@@ -29,12 +30,12 @@ public class EffectAmountFunction implements FloatFunction<EffectAmountFunction>
 
     @Override
     public float apply(LivingEntity entity) {
-        List<MobEffect> effects = entity.getActiveEffects().stream().map(MobEffectInstance::getEffect).toList();
+        List<Holder<MobEffect>> effects = entity.getActiveEffects().stream().map(MobEffectInstance::getEffect).toList();
         return switch (effectType) {
             case ANY -> effects.size();
-            case NEUTRAL -> effects.stream().filter(e -> e.getCategory() == MobEffectCategory.NEUTRAL).count();
-            case HARMFUL -> effects.stream().filter(e -> e.getCategory() == MobEffectCategory.HARMFUL).count();
-            case BENEFICIAL -> effects.stream().filter(e -> e.getCategory() == MobEffectCategory.BENEFICIAL).count();
+            case NEUTRAL -> effects.stream().filter(e -> e.value().getCategory() == MobEffectCategory.NEUTRAL).count();
+            case HARMFUL -> effects.stream().filter(e -> e.value().getCategory() == MobEffectCategory.HARMFUL).count();
+            case BENEFICIAL -> effects.stream().filter(e -> e.value().getCategory() == MobEffectCategory.BENEFICIAL).count();
         };
     }
 

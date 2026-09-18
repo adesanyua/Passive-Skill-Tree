@@ -11,14 +11,14 @@ import daripher.skilltree.skill.bonus.predicate.enchantment.EnchantmentCondition
 import daripher.skilltree.skill.bonus.predicate.item.ItemStackPredicate;
 import daripher.skilltree.skill.bonus.predicate.living.LivingEntityPredicate;
 import daripher.skilltree.skill.requirement.SkillRequirement;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.data.DataGenerator;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.crafting.RecipeSerializer;
-import net.minecraftforge.common.data.LanguageProvider;
-import net.minecraftforge.registries.ForgeRegistries;
+import net.neoforged.neoforge.common.data.LanguageProvider;
 
 import java.util.Objects;
 
@@ -50,132 +50,133 @@ public abstract class PSTTranslationProvider extends LanguageProvider {
     }
 
     protected void add(LivingEntityPredicate.Serializer condition, String value) {
-        ResourceLocation id = PSTRegistries.LIVING_CONDITIONS.get().getKey(condition);
+        ResourceLocation id = PSTRegistries.LIVING_CONDITIONS.getKey(condition);
         assert id != null;
         String key = "living_condition.%s.%s".formatted(id.getNamespace(), id.getPath());
         add(key, value);
     }
 
     protected void add(LivingEntityPredicate.Serializer condition, String type, String value) {
-        ResourceLocation id = PSTRegistries.LIVING_CONDITIONS.get().getKey(condition);
+        ResourceLocation id = PSTRegistries.LIVING_CONDITIONS.getKey(condition);
         assert id != null;
         String key = "living_condition.%s.%s.%s".formatted(id.getNamespace(), id.getPath(), type);
         add(key, value);
     }
 
     protected void add(MobEffectPredicate.Serializer condition, String value) {
-        ResourceLocation id = PSTRegistries.MOB_EFFECT_PREDICATES.get().getKey(condition);
+        ResourceLocation id = PSTRegistries.MOB_EFFECT_PREDICATES.getKey(condition);
         assert id != null;
         String key = "mob_effect_predicate.%s.%s".formatted(id.getNamespace(), id.getPath());
         add(key, value);
     }
 
     protected void add(MobEffectPredicate.Serializer condition, String type, String value) {
-        ResourceLocation id = PSTRegistries.MOB_EFFECT_PREDICATES.get().getKey(condition);
+        ResourceLocation id = PSTRegistries.MOB_EFFECT_PREDICATES.getKey(condition);
         assert id != null;
         String key = "mob_effect_predicate.%s.%s.%s".formatted(id.getNamespace(), id.getPath(), type);
         add(key, value);
     }
 
     protected void add(SkillRequirement.Serializer requirement, String value) {
-        ResourceLocation id = PSTRegistries.SKILL_REQUIREMENTS.get().getKey(requirement);
+        ResourceLocation id = PSTRegistries.SKILL_REQUIREMENTS.getKey(requirement);
         assert id != null;
         String key = "skill_requirements.%s.%s".formatted(id.getNamespace(), id.getPath());
         add(key, value);
     }
 
     protected void add(SkillRequirement.Serializer requirement, String type, String value) {
-        ResourceLocation id = PSTRegistries.SKILL_REQUIREMENTS.get().getKey(requirement);
+        ResourceLocation id = PSTRegistries.SKILL_REQUIREMENTS.getKey(requirement);
         assert id != null;
         String key = "skill_requirements.%s.%s.%s".formatted(id.getNamespace(), id.getPath(), type);
         add(key, value);
     }
 
     protected void add(SkillEventListener.Serializer condition, String value) {
-        ResourceLocation id = PSTRegistries.EVENT_LISTENERS.get().getKey(condition);
+        ResourceLocation id = PSTRegistries.EVENT_LISTENERS.getKey(condition);
         assert id != null;
         String key = "event_listener.%s.%s".formatted(id.getNamespace(), id.getPath());
         add(key, value);
     }
 
     protected void add(SkillEventListener.Serializer condition, String type, String value) {
-        ResourceLocation id = PSTRegistries.EVENT_LISTENERS.get().getKey(condition);
+        ResourceLocation id = PSTRegistries.EVENT_LISTENERS.getKey(condition);
         assert id != null;
         String key = "event_listener.%s.%s.%s".formatted(id.getNamespace(), id.getPath(), type);
         add(key, value);
     }
 
     protected void add(DamageCondition.Serializer condition, String type, String value) {
-        ResourceLocation id = PSTRegistries.DAMAGE_CONDITIONS.get().getKey(condition);
+        ResourceLocation id = PSTRegistries.DAMAGE_CONDITIONS.getKey(condition);
         assert id != null;
         String key = "damage_condition.%s.%s.%s".formatted(id.getNamespace(), id.getPath(), type);
         add(key, value);
     }
 
     protected void add(DamageCondition.Serializer condition, String value) {
-        ResourceLocation id = PSTRegistries.DAMAGE_CONDITIONS.get().getKey(condition);
+        ResourceLocation id = PSTRegistries.DAMAGE_CONDITIONS.getKey(condition);
         assert id != null;
         String key = "damage_condition.%s.%s".formatted(id.getNamespace(), id.getPath());
         add(key, value);
     }
 
     protected void add(LivingMultiplier.Serializer multiplier, String value) {
-        ResourceLocation id = PSTRegistries.LIVING_MULTIPLIERS.get().getKey(multiplier);
+        ResourceLocation id = PSTRegistries.LIVING_MULTIPLIERS.getKey(multiplier);
         assert id != null;
         String key = "skill_bonus_multiplier.%s.%s".formatted(id.getNamespace(), id.getPath());
         add(key, value);
     }
 
     protected void add(LivingMultiplier.Serializer multiplier, String type, String value) {
-        ResourceLocation id = PSTRegistries.LIVING_MULTIPLIERS.get().getKey(multiplier);
+        ResourceLocation id = PSTRegistries.LIVING_MULTIPLIERS.getKey(multiplier);
         assert id != null;
         String key = "skill_bonus_multiplier.%s.%s.%s".formatted(id.getNamespace(), id.getPath(), type);
         add(key, value);
     }
 
     protected void add(FloatFunction.Serializer provider, String value) {
-        ResourceLocation id = PSTRegistries.FLOAT_FUNCTIONS.get().getKey(provider);
+        ResourceLocation id = PSTRegistries.FLOAT_FUNCTIONS.getKey(provider);
         assert id != null;
         String key = "value_provider.%s.%s".formatted(id.getNamespace(), id.getPath());
         add(key, value);
     }
 
     protected void add(FloatFunction.Serializer provider, String type, String value) {
-        ResourceLocation id = PSTRegistries.FLOAT_FUNCTIONS.get().getKey(provider);
+        ResourceLocation id = PSTRegistries.FLOAT_FUNCTIONS.getKey(provider);
         assert id != null;
         String key = "value_provider.%s.%s.%s".formatted(id.getNamespace(), id.getPath(), type);
         add(key, value);
     }
 
     protected void add(SkillBonus.Serializer serializer, String value) {
-        ResourceLocation id = PSTRegistries.SKILL_BONUSES.get().getKey(serializer);
+        ResourceLocation id = PSTRegistries.SKILL_BONUSES.getKey(serializer);
         assert id != null;
         String key = "skill_bonus.%s.%s".formatted(id.getNamespace(), id.getPath());
         add(key, value);
     }
 
     protected void add(SkillBonus.Serializer serializer, String type, String value) {
-        ResourceLocation id = PSTRegistries.SKILL_BONUSES.get().getKey(serializer);
+        ResourceLocation id = PSTRegistries.SKILL_BONUSES.getKey(serializer);
         assert id != null;
         String key = "skill_bonus.%s.%s.%s".formatted(id.getNamespace(), id.getPath(), type);
         add(key, value);
     }
 
     protected void add(ItemStackPredicate.Serializer serializer, String type, String value) {
-        ResourceLocation id = PSTRegistries.ITEM_CONDITIONS.get().getKey(serializer);
+        ResourceLocation id = PSTRegistries.ITEM_CONDITIONS.getKey(serializer);
         assert id != null;
         String key = "item_condition.%s.%s.%s".formatted(id.getNamespace(), id.getPath(), type);
         add(key, value);
     }
 
     protected void add(ItemStackPredicate.Serializer serializer, String value) {
-        ResourceLocation id = PSTRegistries.ITEM_CONDITIONS.get().getKey(serializer);
+        ResourceLocation id = PSTRegistries.ITEM_CONDITIONS.getKey(serializer);
         assert id != null;
         String key = "item_condition.%s.%s".formatted(id.getNamespace(), id.getPath());
         add(key, value);
     }
 
-    protected void add(TagKey<Item> itemTag, String value) {
+    @Override
+    public void add(TagKey<?> itemTag, String value) {
         ResourceLocation id = itemTag.location();
         String key = "item_tag.%s".formatted(id.toString());
         add(key, value);
@@ -188,7 +189,7 @@ public abstract class PSTTranslationProvider extends LanguageProvider {
     }
 
     protected void add(EnchantmentCondition.Serializer serializer, String value) {
-        ResourceLocation id = PSTRegistries.ENCHANTMENT_CONDITIONS.get().getKey(serializer);
+        ResourceLocation id = PSTRegistries.ENCHANTMENT_CONDITIONS.getKey(serializer);
         assert id != null;
         String key = "enchantment_condition.%s.%s".formatted(id.getNamespace(), id.getPath());
         add(key, value);
@@ -199,13 +200,13 @@ public abstract class PSTTranslationProvider extends LanguageProvider {
     }
 
     protected void add(RecipeSerializer<?> recipeSerializer, String translation) {
-        ResourceLocation id = ForgeRegistries.RECIPE_SERIALIZERS.getKey(recipeSerializer);
+        ResourceLocation id = BuiltInRegistries.RECIPE_SERIALIZER.getKey(recipeSerializer);
         Objects.requireNonNull(id);
         add("recipe.%s.%s".formatted(id.getNamespace(), id.getPath()), translation);
     }
 
     protected void add(RecipeSerializer<?> recipeSerializer, String type, String translation) {
-        ResourceLocation id = ForgeRegistries.RECIPE_SERIALIZERS.getKey(recipeSerializer);
+        ResourceLocation id = BuiltInRegistries.RECIPE_SERIALIZER.getKey(recipeSerializer);
         Objects.requireNonNull(id);
         add("recipe.%s.%s.%s".formatted(id.getNamespace(), id.getPath(), type), translation);
     }

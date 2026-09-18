@@ -4,6 +4,7 @@ import com.google.common.collect.HashMultimap;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import daripher.skilltree.client.tooltip.TooltipHelper;
+import daripher.skilltree.SkillTreeMod;
 import daripher.skilltree.client.widget.editor.SkillTreeEditor;
 import daripher.skilltree.compat.curios.CuriosCompatibility;
 import daripher.skilltree.data.serializers.SerializationHelper;
@@ -13,6 +14,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import top.theillusivec4.curios.api.CuriosApi;
@@ -23,15 +25,15 @@ import java.util.function.Consumer;
 public final class CurioSlotsBonus implements SkillBonus<CurioSlotsBonus> {
     private String slotName;
     private int amount;
-    private final UUID modifierId;
+    private final ResourceLocation modifierId;
 
     public CurioSlotsBonus(String slotName, int amount) {
         this.slotName = slotName;
         this.amount = amount;
-        this.modifierId = UUID.randomUUID();
+        this.modifierId = ResourceLocation.fromNamespaceAndPath(SkillTreeMod.MOD_ID, UUID.randomUUID().toString());
     }
 
-    private CurioSlotsBonus(String slotName, int amount, UUID modifierId) {
+    private CurioSlotsBonus(String slotName, int amount, ResourceLocation modifierId) {
         this.slotName = slotName;
         this.amount = amount;
         this.modifierId = modifierId;
@@ -42,7 +44,7 @@ public final class CurioSlotsBonus implements SkillBonus<CurioSlotsBonus> {
         if (firstTime) {
             CuriosApi.getCuriosInventory(player).ifPresent(inv -> {
                 HashMultimap<String, AttributeModifier> modifiers = HashMultimap.create();
-                AttributeModifier modifier = new AttributeModifier(modifierId, "SkillBonus", amount, AttributeModifier.Operation.ADDITION);
+                AttributeModifier modifier = new AttributeModifier(modifierId, amount, AttributeModifier.Operation.ADD_VALUE);
                 modifiers.put(slotName, modifier);
                 inv.addPermanentSlotModifiers(modifiers);
             });
@@ -53,7 +55,7 @@ public final class CurioSlotsBonus implements SkillBonus<CurioSlotsBonus> {
     public void onSkillRemoved(ServerPlayer player) {
         CuriosApi.getCuriosInventory(player).ifPresent(inv -> {
             HashMultimap<String, AttributeModifier> modifiers = HashMultimap.create();
-            AttributeModifier modifier = new AttributeModifier(modifierId, "SkillBonus", amount, AttributeModifier.Operation.ADDITION);
+            AttributeModifier modifier = new AttributeModifier(modifierId, amount, AttributeModifier.Operation.ADD_VALUE);
             modifiers.put(slotName, modifier);
             inv.removeSlotModifiers(modifiers);
         });
@@ -92,7 +94,7 @@ public final class CurioSlotsBonus implements SkillBonus<CurioSlotsBonus> {
         } else {
             slotDescription = TooltipHelper.getSlotTooltip(slotName);
         }
-        MutableComponent tooltip = TooltipHelper.getSkillBonusTooltip(slotDescription, amount, AttributeModifier.Operation.ADDITION);
+        MutableComponent tooltip = TooltipHelper.getSkillBonusTooltip(slotDescription, amount, AttributeModifier.Operation.ADD_VALUE);
         return tooltip.withStyle(TooltipHelper.getSkillBonusStyle(isPositive()));
     }
 
@@ -136,7 +138,7 @@ public final class CurioSlotsBonus implements SkillBonus<CurioSlotsBonus> {
             String slotName = SerializationHelper.getElement(json, "slot").getAsString();
             int amount = SerializationHelper.getElement(json, "amount").getAsInt();
             String uuid = SerializationHelper.getElement(json, "modifier_id").getAsString();
-            return new CurioSlotsBonus(slotName, amount, UUID.fromString(uuid));
+            return new CurioSlotsBonus(slotName, amount, ResourceLocation.parse(uuid));
         }
 
         @Override
@@ -154,7 +156,7 @@ public final class CurioSlotsBonus implements SkillBonus<CurioSlotsBonus> {
             String slotName = tag.getString("slot");
             int amount = tag.getInt("amount");
             String uuid = tag.getString("modifier_id");
-            return new CurioSlotsBonus(slotName, amount, UUID.fromString(uuid));
+            return new CurioSlotsBonus(slotName, amount, ResourceLocation.parse(uuid));
         }
 
         @Override
@@ -174,7 +176,7 @@ public final class CurioSlotsBonus implements SkillBonus<CurioSlotsBonus> {
             String slotName = buf.readUtf();
             int amount = buf.readInt();
             String uuid = buf.readUtf();
-            return new CurioSlotsBonus(slotName, amount, UUID.fromString(uuid));
+            return new CurioSlotsBonus(slotName, amount, ResourceLocation.parse(uuid));
         }
 
         @Override

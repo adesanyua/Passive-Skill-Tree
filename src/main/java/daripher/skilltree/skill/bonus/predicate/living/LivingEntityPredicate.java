@@ -12,7 +12,7 @@ import java.util.function.Predicate;
 
 public interface LivingEntityPredicate extends Predicate<LivingEntity> {
     default String getDescriptionId() {
-        ResourceLocation id = PSTRegistries.LIVING_CONDITIONS.get().getKey(getSerializer());
+        ResourceLocation id = PSTRegistries.LIVING_CONDITIONS.getKey(getSerializer());
         assert id != null;
         return "living_condition.%s.%s".formatted(id.getNamespace(), id.getPath());
     }

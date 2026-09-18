@@ -5,13 +5,13 @@ import com.google.gson.JsonParseException;
 import daripher.skilltree.client.widget.editor.SkillTreeEditor;
 import daripher.skilltree.init.predicate.PSTItemPredicates;
 import net.minecraft.ChatFormatting;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.registries.ForgeRegistries;
 
 import java.util.Objects;
 import java.util.function.Consumer;
@@ -25,12 +25,12 @@ public final class ItemIdPredicate implements ItemStackPredicate {
 
     @Override
     public boolean test(ItemStack stack) {
-        return ForgeRegistries.ITEMS.getValue(id) == stack.getItem();
+        return BuiltInRegistries.ITEM.get(id) == stack.getItem();
     }
 
     @Override
     public String getDescriptionId() {
-        Item item = ForgeRegistries.ITEMS.getValue(id);
+        Item item = BuiltInRegistries.ITEM.get(id);
         if (item != null) {
             return item.getDescriptionId();
         }
@@ -74,10 +74,11 @@ public final class ItemIdPredicate implements ItemStackPredicate {
     }
 
     private static boolean isItemId(String text) {
-        if (!ResourceLocation.isValidResourceLocation(text)) {
+        ResourceLocation parsedId = ResourceLocation.tryParse(text);
+        if (parsedId == null) {
             return false;
         }
-        return ForgeRegistries.ITEMS.containsKey(ResourceLocation.parse(text));
+        return BuiltInRegistries.ITEM.containsKey(parsedId);
     }
 
     public void setId(ResourceLocation id) {

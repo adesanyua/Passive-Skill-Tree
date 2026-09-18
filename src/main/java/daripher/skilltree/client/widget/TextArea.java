@@ -19,8 +19,8 @@ public class TextArea extends MultiLineEditBox implements TickingWidget {
     }
 
     @Override
-    public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
-        return isFocused() && super.mouseScrolled(mouseX, mouseY, delta);
+    public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
+        return isFocused() && super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
     }
 
     @Override
@@ -36,6 +36,5 @@ public class TextArea extends MultiLineEditBox implements TickingWidget {
 
     @Override
     public void onWidgetTick() {
-        this.tick();
     }
 }

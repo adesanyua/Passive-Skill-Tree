@@ -13,7 +13,7 @@ import java.util.function.Predicate;
 
 public interface ItemStackPredicate extends Predicate<ItemStack> {
     default String getDescriptionId() {
-        ResourceLocation id = PSTRegistries.ITEM_CONDITIONS.get().getKey(getSerializer());
+        ResourceLocation id = PSTRegistries.ITEM_CONDITIONS.getKey(getSerializer());
         Objects.requireNonNull(id);
         return "item_condition.%s.%s".formatted(id.getNamespace(), id.getPath());
     }

@@ -14,15 +14,15 @@ import net.minecraft.world.entity.projectile.AbstractArrow;
 import net.minecraft.world.entity.projectile.Projectile;
 import net.minecraft.world.entity.projectile.ThrownPotion;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.event.entity.EntityJoinLevelEvent;
-import net.minecraftforge.event.entity.living.LivingHurtEvent;
-import net.minecraftforge.eventbus.api.EventPriority;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
+import net.neoforged.neoforge.event.entity.EntityJoinLevelEvent;
+import net.neoforged.neoforge.event.entity.living.LivingIncomingDamageEvent;
+import net.neoforged.bus.api.EventPriority;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
 
 import java.util.List;
 
-@Mod.EventBusSubscriber(modid = SkillTreeMod.MOD_ID)
+@EventBusSubscriber(modid = SkillTreeMod.MOD_ID)
 public class ProjectileDuplicationBonusHandler {
     public static final String IS_DUPLICATED_TAG_NAME = "IS_DUPLICATED";
 
@@ -93,10 +93,13 @@ public class ProjectileDuplicationBonusHandler {
         projectileTag.putBoolean(IS_DUPLICATED_TAG_NAME, true);
         if (duplicate instanceof AbstractArrow duplicateArrow) {
             AbstractArrow originalArrow = (AbstractArrow) original;
+            // Copy arrow data, including the firing weapon used by enchantment effects.
+            // Additional data excludes the entity UUID, position and velocity.
+            CompoundTag arrowData = new CompoundTag();
+            originalArrow.addAdditionalSaveData(arrowData);
+            duplicateArrow.readAdditionalSaveData(arrowData);
+            duplicateArrow.setRemainingFireTicks(originalArrow.getRemainingFireTicks());
             duplicateArrow.pickup = AbstractArrow.Pickup.DISALLOWED;
-            float velocity = (float) movementVector.length();
-            duplicateArrow.setEnchantmentEffectsFromEntity(player, velocity);
-            duplicateArrow.setBaseDamage(originalArrow.getBaseDamage());
         } else if (duplicate instanceof ThrownPotion potion) {
             ThrownPotion originalPotion = (ThrownPotion) original;
             potion.setItem(originalPotion.getItem());
@@ -114,7 +117,7 @@ public class ProjectileDuplicationBonusHandler {
     }
 
     @SubscribeEvent(priority = EventPriority.HIGH)
-    public static void removeInvulnerabilityTicksForDupedProjectiles(LivingHurtEvent event) {
+    public static void removeInvulnerabilityTicksForDupedProjectiles(LivingIncomingDamageEvent event) {
         DamageSource damageSource = event.getSource();
         if (!(damageSource.getDirectEntity() instanceof Projectile projectile)) {
             return;
@@ -128,5 +131,6 @@ public class ProjectileDuplicationBonusHandler {
         }
         LivingEntity target = event.getEntity();
         target.invulnerableTime = 0;
+        event.setInvulnerabilityTicks(0);
     }
 }

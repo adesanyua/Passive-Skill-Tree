@@ -5,7 +5,8 @@ import daripher.skilltree.inventory.menu.WorkbenchContainer;
 import daripher.skilltree.recipe.SkillRequiringRecipe;
 import daripher.skilltree.skill.SkillBonusProvider;
 import daripher.skilltree.skill.bonus.player.RecipeUnlockBonus;
-import net.minecraft.core.RegistryAccess;
+import net.minecraft.core.HolderLookup;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
@@ -14,7 +15,6 @@ import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.registries.ForgeRegistries;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -24,7 +24,7 @@ import java.util.Map;
 import java.util.Objects;
 
 public abstract class AbstractWorkbenchRecipe implements Recipe<WorkbenchContainer>, SkillRequiringRecipe {
-    private final ResourceLocation id;
+    private ResourceLocation id;
     private final boolean requiresPassiveSkill;
 
     public AbstractWorkbenchRecipe(ResourceLocation id, boolean requiresPassiveSkill) {
@@ -45,7 +45,7 @@ public abstract class AbstractWorkbenchRecipe implements Recipe<WorkbenchContain
     }
 
     public String getDescriptionId() {
-        ResourceLocation id = ForgeRegistries.RECIPE_SERIALIZERS.getKey(getSerializer());
+        ResourceLocation id = BuiltInRegistries.RECIPE_SERIALIZER.getKey(getSerializer());
         Objects.requireNonNull(id);
         return "recipe.%s.%s".formatted(id.getNamespace(), id.getPath());
     }
@@ -88,20 +88,24 @@ public abstract class AbstractWorkbenchRecipe implements Recipe<WorkbenchContain
         return width == 5 && height == 2;
     }
 
-    @Override
     public @NotNull ResourceLocation getId() {
         return id;
     }
 
+    public AbstractWorkbenchRecipe bindId(ResourceLocation id) {
+        this.id = id;
+        return this;
+    }
+
     @Deprecated
     @Override
-    public @NotNull ItemStack getResultItem(@NotNull RegistryAccess registryAccess) {
+    public @NotNull ItemStack getResultItem(@NotNull HolderLookup.Provider lookupProvider) {
         return ItemStack.EMPTY;
     }
 
     @Override
     public @NotNull RecipeType<?> getType() {
-        return PSTRecipeTypes.WORKBENCH;
+        return PSTRecipeTypes.WORKBENCH.get();
     }
 
     @Override

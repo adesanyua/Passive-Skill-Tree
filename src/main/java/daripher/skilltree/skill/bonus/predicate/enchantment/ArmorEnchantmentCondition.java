@@ -5,14 +5,20 @@ import com.google.gson.JsonParseException;
 import daripher.skilltree.init.predicate.PSTEnchantmentPredicates;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.world.item.enchantment.EnchantmentCategory;
+import net.minecraft.tags.ItemTags;
+import net.minecraft.tags.TagKey;
+import net.minecraft.world.item.Item;
 
 import java.util.Objects;
 
 public class ArmorEnchantmentCondition implements EnchantmentCondition {
     @Override
-    public boolean met(EnchantmentCategory category) {
-        return category == EnchantmentCategory.ARMOR || category == EnchantmentCategory.ARMOR_CHEST || category == EnchantmentCategory.ARMOR_FEET || category == EnchantmentCategory.ARMOR_HEAD || category == EnchantmentCategory.ARMOR_LEGS;
+    public boolean met(TagKey<Item> supportedItems) {
+        return supportedItems == ItemTags.ARMOR_ENCHANTABLE
+                || supportedItems == ItemTags.CHEST_ARMOR_ENCHANTABLE
+                || supportedItems == ItemTags.FOOT_ARMOR_ENCHANTABLE
+                || supportedItems == ItemTags.HEAD_ARMOR_ENCHANTABLE
+                || supportedItems == ItemTags.LEG_ARMOR_ENCHANTABLE;
     }
 
     @Override

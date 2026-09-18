@@ -5,14 +5,19 @@ import com.google.gson.JsonParseException;
 import daripher.skilltree.init.predicate.PSTEnchantmentPredicates;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.world.item.enchantment.EnchantmentCategory;
+import net.minecraft.tags.ItemTags;
+import net.minecraft.tags.TagKey;
+import net.minecraft.world.item.Item;
 
 import java.util.Objects;
 
 public class WeaponEnchantmentCondition implements EnchantmentCondition {
     @Override
-    public boolean met(EnchantmentCategory category) {
-        return category == EnchantmentCategory.WEAPON || category == EnchantmentCategory.BOW || category == EnchantmentCategory.CROSSBOW || category == EnchantmentCategory.TRIDENT;
+    public boolean met(TagKey<Item> supportedItems) {
+        return supportedItems == ItemTags.WEAPON_ENCHANTABLE
+                || supportedItems == ItemTags.BOW_ENCHANTABLE
+                || supportedItems == ItemTags.CROSSBOW_ENCHANTABLE
+                || supportedItems == ItemTags.TRIDENT_ENCHANTABLE;
     }
 
     @Override

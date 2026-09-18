@@ -1,18 +1,18 @@
 package daripher.skilltree.recipe.workbench;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
+import com.mojang.serialization.MapCodec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
+import daripher.skilltree.SkillTreeMod;
 import daripher.skilltree.client.tooltip.TooltipHelper;
-import daripher.skilltree.data.serializers.SerializationHelper;
 import daripher.skilltree.init.PSTRecipeSerializers;
 import daripher.skilltree.inventory.menu.WorkbenchContainer;
-import daripher.skilltree.network.NetworkHelper;
 import daripher.skilltree.skill.bonus.item.ItemBonus;
 import daripher.skilltree.skill.bonus.item.ItemBonusHandler;
 import daripher.skilltree.skill.bonus.predicate.item.ItemStackPredicate;
-import net.minecraft.core.RegistryAccess;
-import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.core.HolderLookup;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
@@ -26,7 +26,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -43,7 +42,7 @@ public class WorkbenchUpgradeBonusRecipe extends AbstractWorkbenchRecipe {
     }
 
     @Override
-    public @NotNull ItemStack assemble(@NotNull WorkbenchContainer container, @NotNull RegistryAccess registryAccess) {
+    public @NotNull ItemStack assemble(@NotNull WorkbenchContainer container, @NotNull HolderLookup.Provider lookupProvider) {
         return getResult(container);
     }
 
@@ -113,45 +112,39 @@ public class WorkbenchUpgradeBonusRecipe extends AbstractWorkbenchRecipe {
     }
 
     public static class Serializer implements RecipeSerializer<WorkbenchUpgradeBonusRecipe> {
+        private static final ResourceLocation UNBOUND_ID =
+                ResourceLocation.fromNamespaceAndPath(SkillTreeMod.MOD_ID, "unbound_workbench_item_bonus");
+        private static final MapCodec<WorkbenchUpgradeBonusRecipe> CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
+                WorkbenchRecipeCodecs.ITEM_PREDICATE_CODEC.fieldOf("base_item_condition")
+                        .forGetter(recipe -> recipe.baseItemStackPredicate),
+                WorkbenchRecipeCodecs.ITEM_BONUS_CODEC.fieldOf("item_bonus").forGetter(recipe -> recipe.itemBonus),
+                com.mojang.serialization.Codec.BOOL.fieldOf("requires_passive_skill")
+                        .forGetter(WorkbenchUpgradeBonusRecipe::hasPassiveSkillRequirement),
+                WorkbenchRecipeCodecs.IngredientAmount.CODEC.listOf().fieldOf("additionalIngredients")
+                        .forGetter(recipe -> WorkbenchRecipeCodecs.toList(recipe.additionalIngredients))
+        ).apply(instance, (predicate, bonus, requiresSkill, ingredients) -> new WorkbenchUpgradeBonusRecipe(
+                UNBOUND_ID, predicate, WorkbenchRecipeCodecs.toMap(ingredients), requiresSkill, bonus
+        )));
+        private static final StreamCodec<RegistryFriendlyByteBuf, WorkbenchUpgradeBonusRecipe> STREAM_CODEC =
+                StreamCodec.composite(
+                        WorkbenchRecipeCodecs.ITEM_PREDICATE_STREAM_CODEC, recipe -> recipe.baseItemStackPredicate,
+                        WorkbenchRecipeCodecs.ITEM_BONUS_STREAM_CODEC, recipe -> recipe.itemBonus,
+                        ByteBufCodecs.BOOL, WorkbenchUpgradeBonusRecipe::hasPassiveSkillRequirement,
+                        WorkbenchRecipeCodecs.IngredientAmount.STREAM_CODEC.apply(ByteBufCodecs.list()),
+                        recipe -> WorkbenchRecipeCodecs.toList(recipe.additionalIngredients),
+                        (predicate, bonus, requiresSkill, ingredients) -> new WorkbenchUpgradeBonusRecipe(
+                                UNBOUND_ID, predicate, WorkbenchRecipeCodecs.toMap(ingredients), requiresSkill, bonus
+                        )
+                );
+
         @Override
-        public @NotNull WorkbenchUpgradeBonusRecipe fromJson(@NotNull ResourceLocation id, @NotNull JsonObject jsonObject) {
-            ItemStackPredicate baseItemStackPredicate = SerializationHelper.deserializeItemPredicate(jsonObject, "base_item_condition");
-            ItemBonus<?> itemBonus = SerializationHelper.deserializeItemBonus(jsonObject);
-            boolean requiresPassiveSkill = jsonObject.get("requires_passive_skill").getAsBoolean();
-            Map<Ingredient, Integer> additionalIngredients = new HashMap<>();
-            JsonArray ingredientsJson = jsonObject.getAsJsonArray("additionalIngredients");
-            for (JsonElement jsonElement : ingredientsJson) {
-                Ingredient ingredient = Ingredient.fromJson(jsonElement.getAsJsonObject().get("ingredient"));
-                int requiredAmount = jsonElement.getAsJsonObject().get("required_amount").getAsInt();
-                additionalIngredients.put(ingredient, requiredAmount);
-            }
-            return new WorkbenchUpgradeBonusRecipe(id, baseItemStackPredicate, additionalIngredients, requiresPassiveSkill, itemBonus);
+        public MapCodec<WorkbenchUpgradeBonusRecipe> codec() {
+            return CODEC;
         }
 
         @Override
-        public @Nullable WorkbenchUpgradeBonusRecipe fromNetwork(@NotNull ResourceLocation id, @NotNull FriendlyByteBuf buf) {
-            ItemStackPredicate baseItemStackPredicate = NetworkHelper.readItemPredicate(buf);
-            ItemBonus<?> itemBonus = NetworkHelper.readItemBonus(buf);
-            boolean requiresPassiveSkill = buf.readBoolean();
-            Map<Ingredient, Integer> additionalIngredients = new HashMap<>();
-            int ingredientsCount = buf.readInt();
-            for (int i = 0; i < ingredientsCount; i++) {
-                additionalIngredients.put(Ingredient.fromNetwork(buf), buf.readInt());
-            }
-            return new WorkbenchUpgradeBonusRecipe(id, baseItemStackPredicate, additionalIngredients, requiresPassiveSkill, itemBonus);
-        }
-
-        @Override
-        public void toNetwork(@NotNull FriendlyByteBuf buf, @NotNull WorkbenchUpgradeBonusRecipe recipe) {
-            NetworkHelper.writeItemPredicate(buf, recipe.baseItemStackPredicate);
-            NetworkHelper.writeItemBonus(buf, recipe.itemBonus);
-            buf.writeBoolean(recipe.hasPassiveSkillRequirement());
-            int ingredientsCount = recipe.getAdditionalIngredients().size();
-            buf.writeInt(ingredientsCount);
-            recipe.getAdditionalIngredients().forEach((ingredient, requiredAmount) -> {
-                ingredient.toNetwork(buf);
-                buf.writeInt(requiredAmount);
-            });
+        public StreamCodec<RegistryFriendlyByteBuf, WorkbenchUpgradeBonusRecipe> streamCodec() {
+            return STREAM_CODEC;
         }
     }
 }

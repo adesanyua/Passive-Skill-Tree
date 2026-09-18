@@ -34,14 +34,15 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.core.Registry;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.stats.StatType;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.entity.ai.attributes.Attribute;
+import net.minecraft.core.Holder;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
-import net.minecraftforge.registries.ForgeRegistries;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
@@ -77,13 +78,13 @@ public class SkillTreeEditor extends WidgetGroup<AbstractWidget> {
     }
 
     @Override
-    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+    protected void renderWidget(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         skillMirrorer.render(graphics, mouseX, mouseY, partialTick);
         skillDragger.render(graphics, mouseX, mouseY, partialTick);
         if (height > 0) {
             graphics.fill(getX(), getY(), getX() + width, getY() + height, 0xDD000000);
         }
-        super.render(graphics, mouseX, mouseY, partialTick);
+        super.renderWidget(graphics, mouseX, mouseY, partialTick);
     }
 
     @Override
@@ -178,12 +179,12 @@ public class SkillTreeEditor extends WidgetGroup<AbstractWidget> {
     }
 
     private Collection<StatRequirement> getDefaultRequirementInstances() {
-        return ForgeRegistries.STAT_TYPES.getValues().stream().map(SkillTreeEditor::createDefaultRequirement).filter(Objects::nonNull)
+        return BuiltInRegistries.STAT_TYPE.stream().map(SkillTreeEditor::createDefaultRequirement).filter(Objects::nonNull)
                 .toList();
     }
 
     private static @Nullable <T> StatRequirement createDefaultRequirement(StatType<T> statType) {
-        ResourceLocation statId = ForgeRegistries.STAT_TYPES.getKey(statType);
+        ResourceLocation statId = BuiltInRegistries.STAT_TYPE.getKey(statType);
         Registry<T> statRegistry = statType.getRegistry();
         T stat = statRegistry.byId(0);
         if (stat == null) {
@@ -199,8 +200,8 @@ public class SkillTreeEditor extends WidgetGroup<AbstractWidget> {
                 .setElementNameGetter(p -> Component.literal(PSTFloatFunctions.getName(p)));
     }
 
-    public SelectionMenuButton<Attribute> addSelectionMenu(int x, int y, int width, Attribute defaultValue) {
-        Collection<Attribute> values = AttributesHelper.playerAttributesList();
+    public SelectionMenuButton<Holder<Attribute>> addSelectionMenu(int x, int y, int width, Holder<Attribute> defaultValue) {
+        Collection<Holder<Attribute>> values = AttributesHelper.playerAttributesList();
         return addSelectionMenu(x, y, width, values).setValue(defaultValue)
                 .setElementNameGetter(a -> Component.literal(AttributesHelper.getName(a)));
     }
@@ -236,10 +237,10 @@ public class SkillTreeEditor extends WidgetGroup<AbstractWidget> {
                 .setElementNameGetter(c -> Component.literal(PSTItemBonuses.getName(c)));
     }
 
-    public SelectionMenuButton<MobEffect> addSelectionMenu(int x, int y, int width, MobEffect defaultValue) {
-        Collection<MobEffect> values = ForgeRegistries.MOB_EFFECTS.getValues();
+    public SelectionMenuButton<Holder<MobEffect>> addMobEffectSelectionMenu(int x, int y, int width, Holder<MobEffect> defaultValue) {
+        Collection<Holder<MobEffect>> values = BuiltInRegistries.MOB_EFFECT.holders().map(effect -> (Holder<MobEffect>) effect).toList();
         return addSelectionMenu(x, y, width, values).setValue(defaultValue)
-                .setElementNameGetter(e -> Component.literal(e.getDescriptionId()));
+                .setElementNameGetter(e -> Component.literal(e.value().getDescriptionId()));
     }
 
     public SelectionMenuButton<DamageCondition> addSelectionMenu(int x, int y, int width, DamageCondition defaultValue) {

@@ -73,7 +73,6 @@ public class WorkbenchScreen extends AbstractContainerScreen<WorkbenchMenu> {
 
     @Override
     protected void renderBg(@NotNull GuiGraphics guiGraphics, float partialTicks, int mouseX, int mouseY) {
-        renderBackground(guiGraphics);
         guiGraphics.blit(BACKGROUND_TEXTURE, leftPos, topPos, 0, 0, imageWidth, imageHeight);
         renderScroll(guiGraphics);
         renderRecipes(guiGraphics, mouseX, mouseY);
@@ -299,7 +298,6 @@ public class WorkbenchScreen extends AbstractContainerScreen<WorkbenchMenu> {
     @Override
     protected void containerTick() {
         super.containerTick();
-        searchBox.tick();
     }
 
     @Override
@@ -356,11 +354,11 @@ public class WorkbenchScreen extends AbstractContainerScreen<WorkbenchMenu> {
     }
 
     @Override
-    public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
+    public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
         if (isScrollBarActive()) {
-            amountScrolled = (int) Mth.clamp(amountScrolled - delta, 0, getMaxScroll());
+            amountScrolled = (int) Mth.clamp(amountScrolled - scrollY, 0, getMaxScroll());
         }
-        return super.mouseScrolled(mouseX, mouseY, delta);
+        return super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
     }
 
     private Pair<AbstractWorkbenchRecipe, Integer> getRecipeInSlot(int slot) {

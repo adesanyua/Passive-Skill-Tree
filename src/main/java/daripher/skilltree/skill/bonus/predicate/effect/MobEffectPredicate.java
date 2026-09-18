@@ -3,6 +3,7 @@ package daripher.skilltree.skill.bonus.predicate.effect;
 import daripher.skilltree.client.tooltip.TooltipHelper;
 import daripher.skilltree.client.widget.editor.SkillTreeEditor;
 import daripher.skilltree.init.PSTRegistries;
+import net.minecraft.core.Holder;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.effect.MobEffect;
@@ -11,9 +12,9 @@ import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
-public interface MobEffectPredicate extends Predicate<MobEffect> {
+public interface MobEffectPredicate extends Predicate<Holder<MobEffect>> {
     default String getDescriptionId() {
-        ResourceLocation id = PSTRegistries.MOB_EFFECT_PREDICATES.get().getKey(getSerializer());
+        ResourceLocation id = PSTRegistries.MOB_EFFECT_PREDICATES.getKey(getSerializer());
         Objects.requireNonNull(id);
         return "mob_effect_predicate.%s.%s".formatted(id.getNamespace(), id.getPath());
     }

@@ -21,7 +21,7 @@ public interface ItemBonus<T extends ItemBonus<T>> {
     ItemBonus.Serializer getSerializer();
 
     default String getDescriptionId() {
-        ResourceLocation id = PSTRegistries.ITEM_BONUSES.get().getKey(getSerializer());
+        ResourceLocation id = PSTRegistries.ITEM_BONUSES.getKey(getSerializer());
         Objects.requireNonNull(id);
         return "item_bonus.%s.%s".formatted(id.getNamespace(), id.getPath());
     }

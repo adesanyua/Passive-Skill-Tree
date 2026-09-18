@@ -5,13 +5,14 @@ import com.google.gson.JsonParseException;
 import daripher.skilltree.init.predicate.PSTEnchantmentPredicates;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.world.item.enchantment.EnchantmentCategory;
+import net.minecraft.tags.TagKey;
+import net.minecraft.world.item.Item;
 
 public enum NoneEnchantmentCondition implements EnchantmentCondition {
     INSTANCE;
 
     @Override
-    public boolean met(EnchantmentCategory category) {
+    public boolean met(TagKey<Item> supportedItems) {
         return true;
     }
 

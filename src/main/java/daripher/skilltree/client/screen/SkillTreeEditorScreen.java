@@ -12,7 +12,6 @@ import daripher.skilltree.skill.PassiveSkillTree;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.gui.screens.achievement.StatsUpdateListener;
 import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.game.ServerboundClientCommandPacket;
@@ -23,7 +22,7 @@ import org.lwjgl.glfw.GLFW;
 
 import java.util.Objects;
 
-public class SkillTreeEditorScreen extends Screen implements StatsUpdateListener {
+public class SkillTreeEditorScreen extends Screen {
     private final PassiveSkillTree skillTree;
     private final SkillButtons skillButtons;
     private final SkillTreeEditor editorWidgets;
@@ -46,6 +45,7 @@ public class SkillTreeEditorScreen extends Screen implements StatsUpdateListener
             ClientPacketListener connection = getMinecraft().getConnection();
             Objects.requireNonNull(connection);
             connection.send(new ServerboundClientCommandPacket(ServerboundClientCommandPacket.Action.REQUEST_STATS));
+            statsUpdated = true;
         }
         if (skillTree == null) {
             getMinecraft().setScreen(null);
@@ -89,7 +89,7 @@ public class SkillTreeEditorScreen extends Screen implements StatsUpdateListener
 
     @Override
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
-        renderBackground(graphics);
+        renderTreeBackground(graphics);
         skillButtons.render(graphics, mouseX, mouseY, partialTick);
         renderOverlay(graphics);
         editorWidgets.render(graphics, mouseX, mouseY, partialTick);
@@ -136,8 +136,7 @@ public class SkillTreeEditorScreen extends Screen implements StatsUpdateListener
         RenderSystem.disableBlend();
     }
 
-    @Override
-    public void renderBackground(GuiGraphics graphics) {
+    private void renderTreeBackground(GuiGraphics graphics) {
         ResourceLocation texture = ResourceLocation.parse("skilltree:textures/screen/skill_tree_background.png");
         PoseStack poseStack = graphics.pose();
         poseStack.pushPose();
@@ -158,8 +157,9 @@ public class SkillTreeEditorScreen extends Screen implements StatsUpdateListener
     }
 
     @Override
-    public boolean mouseScrolled(double mouseX, double mouseY, double amount) {
-        return editorWidgets.mouseScrolled(mouseX, mouseY, amount) || skillButtons.mouseScrolled(mouseX, mouseY, amount);
+    public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
+        return editorWidgets.mouseScrolled(mouseX, mouseY, scrollX, scrollY)
+                || skillButtons.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
     }
 
     @Override
@@ -194,9 +194,4 @@ public class SkillTreeEditorScreen extends Screen implements StatsUpdateListener
         return editorWidgets.charTyped(codePoint, modifiers);
     }
 
-    @Override
-    public void onStatsUpdated() {
-        statsUpdated = true;
-        init();
-    }
 }

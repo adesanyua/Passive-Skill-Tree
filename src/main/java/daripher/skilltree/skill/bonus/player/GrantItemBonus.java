@@ -9,6 +9,7 @@ import daripher.skilltree.data.serializers.SerializationHelper;
 import daripher.skilltree.init.PSTSkillBonuses;
 import daripher.skilltree.skill.bonus.SkillBonus;
 import net.minecraft.ChatFormatting;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
@@ -20,7 +21,6 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.minecraftforge.registries.ForgeRegistries;
 
 import java.util.List;
 import java.util.Map;
@@ -39,7 +39,7 @@ public final class GrantItemBonus implements SkillBonus<GrantItemBonus> {
     @Override
     public void onSkillLearned(ServerPlayer player, boolean firstTime) {
         if (firstTime) {
-            Item item = ForgeRegistries.ITEMS.getValue(itemId);
+            Item item = BuiltInRegistries.ITEM.get(itemId);
             if (item == null) {
                 SkillTreeEditorData.sendChatMessage("Unknown item: " + itemId, ChatFormatting.DARK_RED);
                 return;
@@ -89,7 +89,7 @@ public final class GrantItemBonus implements SkillBonus<GrantItemBonus> {
 
     @Override
     public MutableComponent getSimpleTooltip() {
-        Item item = ForgeRegistries.ITEMS.getValue(itemId);
+        Item item = BuiltInRegistries.ITEM.get(itemId);
         if (item == null) {
             return Component.literal("Unknown item: " + itemId).withStyle(ChatFormatting.DARK_RED);
         }
@@ -117,7 +117,7 @@ public final class GrantItemBonus implements SkillBonus<GrantItemBonus> {
         editor.increaseHeight(19);
         editor.addLabel(0, 0, "Item", ChatFormatting.GOLD);
         editor.increaseHeight(19);
-        List<ResourceLocation> items = ForgeRegistries.ITEMS.getEntries().stream().map(Map.Entry::getKey).map(ResourceKey::location)
+        List<ResourceLocation> items = BuiltInRegistries.ITEM.keySet().stream()
                 .toList();
         editor.addSelectionMenu(0, 0, 200, items).setValue(itemId).setElementNameGetter(id -> Component.literal(id.toString()))
                 .setResponder(id -> selectItemId(id, consumer));
@@ -195,7 +195,7 @@ public final class GrantItemBonus implements SkillBonus<GrantItemBonus> {
 
         @Override
         public SkillBonus<?> createDefaultInstance() {
-            return new GrantItemBonus(ForgeRegistries.ITEMS.getKey(Items.DIAMOND), 64);
+            return new GrantItemBonus(BuiltInRegistries.ITEM.getKey(Items.DIAMOND), 64);
         }
     }
 }

@@ -6,7 +6,6 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectCategory;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.ai.attributes.AttributeMap;
 import org.jetbrains.annotations.NotNull;
 
 public abstract class SkillBonusEffect extends MobEffect {
@@ -17,32 +16,29 @@ public abstract class SkillBonusEffect extends MobEffect {
         this.bonus = bonus;
     }
 
-    @Override
-    public void removeAttributeModifiers(@NotNull LivingEntity entity, @NotNull AttributeMap attributeMap, int amplifier) {
-        super.removeAttributeModifiers(entity, attributeMap, amplifier);
+    public void onBonusRemoved(@NotNull LivingEntity entity) {
         if (entity instanceof ServerPlayer player) {
             bonus.onSkillRemoved(player);
         }
     }
 
-    @Override
-    public void addAttributeModifiers(@NotNull LivingEntity entity, @NotNull AttributeMap attributeMap, int amplifier) {
-        super.addAttributeModifiers(entity, attributeMap, amplifier);
+    public void onBonusAdded(@NotNull LivingEntity entity) {
         if (entity instanceof ServerPlayer player) {
             bonus.onSkillLearned(player, true);
         }
     }
 
     @Override
-    public boolean isDurationEffectTick(int duration, int amplifier) {
+    public boolean shouldApplyEffectTickThisTick(int duration, int amplifier) {
         return bonus instanceof TickingSkillBonus;
     }
 
     @Override
-    public void applyEffectTick(@NotNull LivingEntity entity, int amplifier) {
+    public boolean applyEffectTick(@NotNull LivingEntity entity, int amplifier) {
         if (entity instanceof ServerPlayer player && bonus instanceof TickingSkillBonus ticking) {
             ticking.tick(player);
         }
+        return true;
     }
 
     public SkillBonus<?> getBonus() {

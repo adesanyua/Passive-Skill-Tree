@@ -16,7 +16,7 @@ public interface FloatFunction<T> {
     float apply(LivingEntity entity);
 
     default String getDescriptionId() {
-        ResourceLocation id = PSTRegistries.FLOAT_FUNCTIONS.get().getKey(getSerializer());
+        ResourceLocation id = PSTRegistries.FLOAT_FUNCTIONS.getKey(getSerializer());
         assert id != null;
         return "value_provider.%s.%s".formatted(id.getNamespace(), id.getPath());
     }

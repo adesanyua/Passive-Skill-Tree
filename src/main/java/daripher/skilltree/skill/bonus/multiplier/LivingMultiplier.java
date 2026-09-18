@@ -16,7 +16,7 @@ public interface LivingMultiplier {
     Serializer getSerializer();
 
     default String getDescriptionId() {
-        ResourceLocation id = PSTRegistries.LIVING_MULTIPLIERS.get().getKey(getSerializer());
+        ResourceLocation id = PSTRegistries.LIVING_MULTIPLIERS.getKey(getSerializer());
         Objects.requireNonNull(id);
         return "skill_bonus_multiplier.%s.%s".formatted(id.getNamespace(), id.getPath());
     }

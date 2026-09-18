@@ -23,7 +23,7 @@ public interface EditBoxAccessor {
     int getHighlightPos();
 
     @Accessor
-    int getFrame();
+    long getFocusedTime();
 
     @Accessor
     int getMaxLength();

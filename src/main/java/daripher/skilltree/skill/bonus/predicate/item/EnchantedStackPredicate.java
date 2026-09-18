@@ -12,7 +12,6 @@ import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.enchantment.EnchantmentHelper;
 
 import java.util.Objects;
 import java.util.function.Consumer;
@@ -26,7 +25,7 @@ public final class EnchantedStackPredicate implements ItemStackPredicate {
 
     @Override
     public boolean test(ItemStack stack) {
-        return !EnchantmentHelper.getEnchantments(stack).isEmpty() && itemStackPredicate.test(stack);
+        return !stack.getEnchantments().isEmpty() && itemStackPredicate.test(stack);
     }
 
     @Override

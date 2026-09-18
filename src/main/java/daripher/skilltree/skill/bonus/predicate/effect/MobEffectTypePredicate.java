@@ -6,6 +6,7 @@ import daripher.skilltree.client.widget.editor.SkillTreeEditor;
 import daripher.skilltree.client.widget.editor.menu.selection.SelectionList;
 import daripher.skilltree.init.predicate.PSTMobEffectPredicates;
 import net.minecraft.ChatFormatting;
+import net.minecraft.core.Holder;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
@@ -23,12 +24,12 @@ public final class MobEffectTypePredicate implements MobEffectPredicate {
     }
 
     @Override
-    public boolean test(MobEffect mobEffect) {
+    public boolean test(Holder<MobEffect> mobEffect) {
         return switch (effectType) {
             case ANY -> true;
-            case BENEFICIAL -> mobEffect.getCategory() == MobEffectCategory.BENEFICIAL;
-            case HARMFUL -> mobEffect.getCategory() == MobEffectCategory.HARMFUL;
-            case NEUTRAL -> mobEffect.getCategory() == MobEffectCategory.NEUTRAL;
+            case BENEFICIAL -> mobEffect.value().getCategory() == MobEffectCategory.BENEFICIAL;
+            case HARMFUL -> mobEffect.value().getCategory() == MobEffectCategory.HARMFUL;
+            case NEUTRAL -> mobEffect.value().getCategory() == MobEffectCategory.NEUTRAL;
         };
     }
 

@@ -2,14 +2,14 @@ package daripher.skilltree.init;
 
 import daripher.skilltree.SkillTreeMod;
 import daripher.skilltree.block.WorkbenchBlock;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.level.block.Block;
-import net.minecraftforge.registries.DeferredRegister;
-import net.minecraftforge.registries.ForgeRegistries;
-import net.minecraftforge.registries.RegistryObject;
+import net.neoforged.neoforge.registries.DeferredBlock;
+import net.neoforged.neoforge.registries.DeferredRegister;
 
 public class PSTBlocks {
-    public static final DeferredRegister<Block> REGISTRY = DeferredRegister.create(ForgeRegistries.BLOCKS, SkillTreeMod.MOD_ID);
+    public static final DeferredRegister.Blocks REGISTRY = DeferredRegister.createBlocks(SkillTreeMod.MOD_ID);
 
     // crafting stations
-    public static final RegistryObject<Block> WORKBENCH = REGISTRY.register("workbench", WorkbenchBlock::new);
+    public static final DeferredBlock<Block> WORKBENCH = REGISTRY.register("workbench", WorkbenchBlock::new);
 }

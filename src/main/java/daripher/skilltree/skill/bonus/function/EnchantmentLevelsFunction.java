@@ -18,7 +18,6 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.enchantment.EnchantmentHelper;
 
 import javax.annotation.Nonnull;
 import java.util.Objects;
@@ -38,8 +37,9 @@ public class EnchantmentLevelsFunction implements FloatFunction<EnchantmentLevel
     }
 
     private int getEnchantLevels(Stream<ItemStack> items) {
-        return items.map(EnchantmentHelper::getEnchantments).mapToInt(m -> m.values().stream().reduce(Integer::sum).orElse(0))
-                .reduce(Integer::sum).orElse(0);
+        return items.map(ItemStack::getEnchantments)
+                .mapToInt(enchantments -> enchantments.entrySet().stream().mapToInt(entry -> entry.getIntValue()).sum())
+                .sum();
     }
 
     @Override

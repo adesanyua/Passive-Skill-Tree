@@ -1,20 +1,19 @@
 package daripher.skilltree.config;
 
 import daripher.skilltree.SkillTreeMod;
-import net.minecraftforge.common.ForgeConfigSpec;
-import net.minecraftforge.common.ForgeConfigSpec.ConfigValue;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
-import net.minecraftforge.fml.common.Mod.EventBusSubscriber.Bus;
-import net.minecraftforge.fml.event.config.ModConfigEvent;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.fml.event.config.ModConfigEvent;
+import net.neoforged.neoforge.common.ModConfigSpec;
+import net.neoforged.neoforge.common.ModConfigSpec.ConfigValue;
 
 import java.util.ArrayList;
 import java.util.List;
 
-@EventBusSubscriber(modid = SkillTreeMod.MOD_ID, bus = Bus.MOD)
+@EventBusSubscriber(modid = SkillTreeMod.MOD_ID, bus = EventBusSubscriber.Bus.MOD)
 public class ServerConfig {
-    public static final ForgeConfigSpec SPEC;
-    private static final ForgeConfigSpec.Builder BUILDER = new ForgeConfigSpec.Builder();
+    public static final ModConfigSpec SPEC;
+    private static final ModConfigSpec.Builder BUILDER = new ModConfigSpec.Builder();
     private static final ConfigValue<Integer> MAX_SKILL_POINTS;
     private static final ConfigValue<Integer> FIRST_SKILL_COST;
     private static final ConfigValue<Integer> LAST_SKILL_COST;
@@ -45,7 +44,8 @@ public class ServerConfig {
         BUILDER.comment("You can set cost for each skill point instead");
         USE_POINTS_COSTS_ARRAY = BUILDER.define("Use skill points costs array", false);
         BUILDER.comment("This list's size must be equal to maximum skill points.");
-        SKILL_POINTS_COSTS = BUILDER.defineList("Levelup costs", generateDefaultPointsCosts(), o -> o instanceof Integer i && i > 0);
+        SKILL_POINTS_COSTS = BUILDER.defineList("Levelup costs", generateDefaultPointsCosts(), () -> 1,
+                o -> o instanceof Integer i && i > 0);
         BUILDER.comment("Disabling this will remove chat messages when you gain a skill point.");
         SHOW_CHAT_MESSAGES = BUILDER.define("Show chat messages", true);
         BUILDER.comment("Warning: If you disable this make sure you make alternative way of getting skill points.");

@@ -3,6 +3,7 @@ package daripher.skilltree.skill.bonus.predicate.effect;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import daripher.skilltree.init.predicate.PSTMobEffectPredicates;
+import net.minecraft.core.Holder;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
@@ -12,7 +13,7 @@ public enum NoneMobEffectPredicate implements MobEffectPredicate {
     INSTANCE;
 
     @Override
-    public boolean test(MobEffect mobEffect) {
+    public boolean test(Holder<MobEffect> mobEffect) {
         return true;
     }
 

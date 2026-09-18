@@ -1,10 +1,17 @@
 package daripher.skilltree.recipe.workbench;
 
-import com.google.gson.JsonObject;
+import com.mojang.serialization.MapCodec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
+import daripher.skilltree.SkillTreeMod;
 import daripher.skilltree.init.PSTRecipeSerializers;
 import daripher.skilltree.inventory.menu.WorkbenchContainer;
-import net.minecraft.core.RegistryAccess;
-import net.minecraft.network.FriendlyByteBuf;
+import daripher.skilltree.util.PotionHelper;
+import net.minecraft.core.HolderLookup;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
@@ -13,10 +20,9 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.PotionItem;
 import net.minecraft.world.item.alchemy.Potion;
-import net.minecraft.world.item.alchemy.PotionUtils;
+import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.crafting.RecipeSerializer;
-import net.minecraftforge.registries.ForgeRegistries;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -34,7 +40,7 @@ public class WorkbenchPotionMixingRecipe extends AbstractWorkbenchRecipe {
     }
 
     @Override
-    public @NotNull ItemStack assemble(@NotNull WorkbenchContainer container, @NotNull RegistryAccess registryAccess) {
+    public @NotNull ItemStack assemble(@NotNull WorkbenchContainer container, @NotNull HolderLookup.Provider lookupProvider) {
         return getResult(container);
     }
 
@@ -58,20 +64,17 @@ public class WorkbenchPotionMixingRecipe extends AbstractWorkbenchRecipe {
     }
 
     private void setIsMixtureTag(ItemStack itemStack) {
-        itemStack.getOrCreateTag().putBoolean(IS_MIXTURE_TAG_NAME, true);
+        CustomData.update(DataComponents.CUSTOM_DATA, itemStack, tag -> tag.putBoolean(IS_MIXTURE_TAG_NAME, true));
     }
 
     private boolean canMixPotion(ItemStack itemStack) {
-        if (!itemStack.hasTag()) {
-            return true;
-        }
-        return !itemStack.getOrCreateTag().getBoolean(IS_MIXTURE_TAG_NAME);
+        return !itemStack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY).copyTag().getBoolean(IS_MIXTURE_TAG_NAME);
     }
 
     private Ingredient getPotionItemIngredient(PotionItem baseItem) {
         return cachedPotionItemIngredients.computeIfAbsent(
                 baseItem, item -> {
-                    Collection<Potion> availablePotions = ForgeRegistries.POTIONS.getValues();
+                    Collection<Potion> availablePotions = BuiltInRegistries.POTION.stream().toList();
                     ItemStack[] suitablePotionStacks = availablePotions.stream()
                             .filter(potion -> !potion.getEffects().isEmpty())
                             .map(potion -> getPotionStack(item, potion))
@@ -83,10 +86,9 @@ public class WorkbenchPotionMixingRecipe extends AbstractWorkbenchRecipe {
 
     private Ingredient getAllPotionsIngredient() {
         if (cachedAllPotionsIngredient == null) {
-            Collection<Potion> availablePotions = ForgeRegistries.POTIONS.getValues();
+            Collection<Potion> availablePotions = BuiltInRegistries.POTION.stream().toList();
             List<Potion> potionsWithEffects = availablePotions.stream().filter(potion -> !potion.getEffects().isEmpty()).toList();
-            List<PotionItem> potionItems = ForgeRegistries.ITEMS.getValues()
-                    .stream()
+            List<PotionItem> potionItems = BuiltInRegistries.ITEM.stream()
                     .filter(PotionItem.class::isInstance)
                     .map(PotionItem.class::cast)
                     .toList();
@@ -103,7 +105,7 @@ public class WorkbenchPotionMixingRecipe extends AbstractWorkbenchRecipe {
 
     private static @NotNull ItemStack getPotionStack(PotionItem baseItem, Potion potion) {
         ItemStack itemStack = new ItemStack(baseItem);
-        PotionUtils.setPotion(itemStack, potion);
+        PotionHelper.setPotion(itemStack, potion);
         return itemStack;
     }
 
@@ -138,20 +140,20 @@ public class WorkbenchPotionMixingRecipe extends AbstractWorkbenchRecipe {
 
     private void setMixtureEffects(ItemStack potionStack1, ItemStack potionStack2, ItemStack resultItemStack) {
         List<MobEffectInstance> mobEffectInstances = new ArrayList<>();
-        mobEffectInstances.addAll(PotionUtils.getMobEffects(potionStack1));
-        mobEffectInstances.addAll(PotionUtils.getMobEffects(potionStack2));
-        PotionUtils.setCustomEffects(resultItemStack, mobEffectInstances);
+        mobEffectInstances.addAll(PotionHelper.getEffects(potionStack1));
+        mobEffectInstances.addAll(PotionHelper.getEffects(potionStack2));
+        PotionHelper.setEffects(resultItemStack, mobEffectInstances);
     }
 
     private void setMixtureColor(ItemStack potionStack1, ItemStack potionStack2, ItemStack resultItemStack) {
-        int potionColor = mixHexColors(PotionUtils.getColor(potionStack1), PotionUtils.getColor(potionStack2));
-        resultItemStack.getOrCreateTag().putInt(PotionUtils.TAG_CUSTOM_POTION_COLOR, potionColor);
+        int potionColor = mixHexColors(PotionHelper.getColor(potionStack1), PotionHelper.getColor(potionStack2));
+        PotionHelper.setColor(resultItemStack, potionColor);
     }
 
     private void setMixtureName(ItemStack potionStack1, ItemStack resultItemStack) {
         String descriptionId = potionStack1.getItem().getDescriptionId() + ".mixture";
         MutableComponent itemStackName = Component.translatable(descriptionId);
-        resultItemStack.setHoverName(itemStackName);
+        resultItemStack.set(DataComponents.CUSTOM_NAME, itemStackName);
     }
 
     private int mixHexColors(int color1, int color2) {
@@ -169,21 +171,23 @@ public class WorkbenchPotionMixingRecipe extends AbstractWorkbenchRecipe {
     }
 
     public static class Serializer implements RecipeSerializer<WorkbenchPotionMixingRecipe> {
+        private static final ResourceLocation ID = ResourceLocation.fromNamespaceAndPath(SkillTreeMod.MOD_ID, "potion_mixing");
+        private static final MapCodec<WorkbenchPotionMixingRecipe> CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
+                com.mojang.serialization.Codec.BOOL.fieldOf("requires_passive_skill")
+                        .forGetter(WorkbenchPotionMixingRecipe::hasPassiveSkillRequirement)
+        ).apply(instance, requiresSkill -> new WorkbenchPotionMixingRecipe(ID, requiresSkill)));
+        private static final StreamCodec<RegistryFriendlyByteBuf, WorkbenchPotionMixingRecipe> STREAM_CODEC =
+                StreamCodec.composite(ByteBufCodecs.BOOL, WorkbenchPotionMixingRecipe::hasPassiveSkillRequirement,
+                        requiresSkill -> new WorkbenchPotionMixingRecipe(ID, requiresSkill));
+
         @Override
-        public @NotNull WorkbenchPotionMixingRecipe fromJson(@NotNull ResourceLocation id, @NotNull JsonObject jsonObject) {
-            boolean requiresPassiveSkill = jsonObject.get("requires_passive_skill").getAsBoolean();
-            return new WorkbenchPotionMixingRecipe(id, requiresPassiveSkill);
+        public MapCodec<WorkbenchPotionMixingRecipe> codec() {
+            return CODEC;
         }
 
         @Override
-        public @Nullable WorkbenchPotionMixingRecipe fromNetwork(@NotNull ResourceLocation id, @NotNull FriendlyByteBuf buf) {
-            boolean requiresPassiveSkill = buf.readBoolean();
-            return new WorkbenchPotionMixingRecipe(id, requiresPassiveSkill);
-        }
-
-        @Override
-        public void toNetwork(@NotNull FriendlyByteBuf buf, @NotNull WorkbenchPotionMixingRecipe recipe) {
-            buf.writeBoolean(recipe.hasPassiveSkillRequirement());
+        public StreamCodec<RegistryFriendlyByteBuf, WorkbenchPotionMixingRecipe> streamCodec() {
+            return STREAM_CODEC;
         }
     }
 }

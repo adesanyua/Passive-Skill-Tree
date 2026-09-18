@@ -86,7 +86,7 @@ public class RecipeUnlockBonus implements SkillBonus<RecipeUnlockBonus> {
         ClientLevel clientLevel = Minecraft.getInstance().level;
         Objects.requireNonNull(clientLevel);
         RecipeManager recipesManager = clientLevel.getRecipeManager();
-        List<ResourceLocation> artisanRecipes = recipesManager.getAllRecipesFor(PSTRecipeTypes.WORKBENCH).stream().map(Recipe::getId)
+        List<ResourceLocation> artisanRecipes = recipesManager.getAllRecipesFor(PSTRecipeTypes.WORKBENCH.get()).stream().map(net.minecraft.world.item.crafting.RecipeHolder::id)
                 .toList();
         editor.addSelectionMenu(0, 0, 200, artisanRecipes).setValue(recipeId).setResponder(id -> selectRecipeId(editor, consumer, id));
         editor.increaseHeight(19);

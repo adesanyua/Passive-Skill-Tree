@@ -7,6 +7,7 @@ import daripher.skilltree.client.widget.editor.SkillTreeEditor;
 import daripher.skilltree.data.serializers.SerializationHelper;
 import daripher.skilltree.init.predicate.PSTMobEffectPredicates;
 import daripher.skilltree.network.NetworkHelper;
+import net.minecraft.core.Holder;
 import net.minecraft.ChatFormatting;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
@@ -19,30 +20,30 @@ import java.util.Objects;
 import java.util.function.Consumer;
 
 public final class MobEffectIdPredicate implements MobEffectPredicate {
-    private MobEffect mobEffect;
+    private Holder<MobEffect> mobEffect;
 
-    public MobEffectIdPredicate(MobEffect mobEffect) {
+    public MobEffectIdPredicate(Holder<MobEffect> mobEffect) {
         this.mobEffect = mobEffect;
     }
 
     @Override
-    public boolean test(MobEffect mobEffect) {
+    public boolean test(Holder<MobEffect> mobEffect) {
         return mobEffect == this.mobEffect;
     }
 
     @Override
     public boolean testsForHarmfulEffects() {
-        return mobEffect.getCategory() == MobEffectCategory.HARMFUL;
+        return mobEffect.value().getCategory() == MobEffectCategory.HARMFUL;
     }
 
     @Override
     public Component getTooltip() {
-        return mobEffect.getDisplayName();
+        return mobEffect.value().getDisplayName();
     }
 
     @Override
     public Component getTooltip(String type) {
-        return TooltipHelper.getOptionalTooltip(mobEffect.getDescriptionId(), type);
+        return TooltipHelper.getOptionalTooltip(mobEffect.value().getDescriptionId(), type);
     }
 
     @Override
@@ -71,23 +72,23 @@ public final class MobEffectIdPredicate implements MobEffectPredicate {
     public void addEditorWidgets(SkillTreeEditor editor, Consumer<MobEffectPredicate> consumer) {
         editor.addLabel(0, 0, "Effect Type", ChatFormatting.GREEN);
         editor.increaseHeight(19);
-        editor.addSelectionMenu(0, 0, 200, mobEffect).setResponder(mobEffect -> selectEffect(consumer, mobEffect));
+        editor.addMobEffectSelectionMenu(0, 0, 200, mobEffect).setResponder(mobEffect -> selectEffect(consumer, mobEffect));
         editor.increaseHeight(19);
     }
 
-    private void selectEffect(Consumer<MobEffectPredicate> consumer, MobEffect mobEffect) {
+    private void selectEffect(Consumer<MobEffectPredicate> consumer, Holder<MobEffect> mobEffect) {
         setEffectType(mobEffect);
         consumer.accept(this);
     }
 
-    public void setEffectType(MobEffect mobEffect) {
+    public void setEffectType(Holder<MobEffect> mobEffect) {
         this.mobEffect = mobEffect;
     }
 
     public static class Serializer implements MobEffectPredicate.Serializer {
         @Override
         public MobEffectPredicate deserialize(JsonObject json) throws JsonParseException {
-            MobEffect mobEffect = SerializationHelper.deserializeMobEffect(json);
+            Holder<MobEffect> mobEffect = SerializationHelper.deserializeMobEffect(json);
             return new MobEffectIdPredicate(mobEffect);
         }
 
@@ -99,7 +100,7 @@ public final class MobEffectIdPredicate implements MobEffectPredicate {
 
         @Override
         public MobEffectPredicate deserialize(CompoundTag tag) {
-            MobEffect mobEffect = SerializationHelper.deserializeMobEffect(tag);
+            Holder<MobEffect> mobEffect = SerializationHelper.deserializeMobEffect(tag);
             return new MobEffectIdPredicate(mobEffect);
         }
 
@@ -113,7 +114,7 @@ public final class MobEffectIdPredicate implements MobEffectPredicate {
 
         @Override
         public MobEffectPredicate deserialize(FriendlyByteBuf buf) {
-            MobEffect mobEffect = NetworkHelper.readMobEffect(buf);
+            Holder<MobEffect> mobEffect = NetworkHelper.readMobEffect(buf);
             return new MobEffectIdPredicate(mobEffect);
         }
 

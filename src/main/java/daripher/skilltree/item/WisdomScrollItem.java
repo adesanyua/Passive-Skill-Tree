@@ -3,7 +3,6 @@ package daripher.skilltree.item;
 import daripher.skilltree.capability.skill.IPlayerSkills;
 import daripher.skilltree.capability.skill.PlayerSkillsProvider;
 import daripher.skilltree.config.ServerConfig;
-import daripher.skilltree.network.NetworkDispatcher;
 import daripher.skilltree.network.message.SyncPlayerSkillsMessage;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
@@ -16,7 +15,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.network.PacketDistributor;
+import net.neoforged.neoforge.network.PacketDistributor;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
@@ -43,7 +42,7 @@ public class WisdomScrollItem extends Item {
             level.playSound(null, player, SoundEvents.PLAYER_LEVELUP, player.getSoundSource(), 0.4F, 0.2F + player.getRandom()
                     .nextFloat() * 0.3F);
             skillsCapability.grantSkillPoints(1);
-            NetworkDispatcher.network_channel.send(PacketDistributor.PLAYER.with(() -> (ServerPlayer) player), new SyncPlayerSkillsMessage(player));
+            PacketDistributor.sendToPlayer((ServerPlayer) player, new SyncPlayerSkillsMessage(player));
             if (ServerConfig.show_chat_messages) {
                 player.sendSystemMessage(Component.translatable("skilltree.message.point_command").withStyle(ChatFormatting.YELLOW));
             }
@@ -52,7 +51,7 @@ public class WisdomScrollItem extends Item {
     }
 
     @Override
-    public void appendHoverText(@NotNull ItemStack itemStack, Level level, List<Component> components, @NotNull TooltipFlag tooltipFlag) {
+    public void appendHoverText(@NotNull ItemStack itemStack, TooltipContext context, List<Component> components, @NotNull TooltipFlag tooltipFlag) {
         components.add(Component.translatable(getDescriptionId() + ".tooltip").withStyle(ChatFormatting.GOLD));
     }
 }

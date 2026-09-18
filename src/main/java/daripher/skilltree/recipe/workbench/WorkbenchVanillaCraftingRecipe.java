@@ -1,12 +1,16 @@
 package daripher.skilltree.recipe.workbench;
 
-import com.google.gson.JsonObject;
+import com.mojang.serialization.MapCodec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
+import daripher.skilltree.SkillTreeMod;
 import daripher.skilltree.inventory.menu.WorkbenchContainer;
 import daripher.skilltree.skill.SkillBonusProvider;
 import daripher.skilltree.skill.bonus.player.VanillaRecipeUnlockBonus;
 import net.minecraft.core.NonNullList;
-import net.minecraft.core.RegistryAccess;
-import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.core.HolderLookup;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
@@ -27,9 +31,9 @@ public class WorkbenchVanillaCraftingRecipe extends AbstractWorkbenchRecipe {
     private Map<Ingredient, Integer> additionalIngredients;
     private final ItemStack result;
 
-    public WorkbenchVanillaCraftingRecipe(CraftingRecipe vanillaRecipe, RegistryAccess registryAccess) {
-        super(vanillaRecipe.getId(), true);
-        this.result = vanillaRecipe.getResultItem(registryAccess);
+    public WorkbenchVanillaCraftingRecipe(ResourceLocation id, CraftingRecipe vanillaRecipe, HolderLookup.Provider lookupProvider) {
+        super(id, true);
+        this.result = vanillaRecipe.getResultItem(lookupProvider);
         additionalIngredients = getIngredientsFromCraftingRecipe(vanillaRecipe);
         List<Pair<Ingredient, Integer>> ingredients = new ArrayList<>(additionalIngredients.entrySet().stream().map(Pair::of).toList());
         if (!ingredients.isEmpty()) {
@@ -72,7 +76,7 @@ public class WorkbenchVanillaCraftingRecipe extends AbstractWorkbenchRecipe {
     }
 
     @Override
-    public @NotNull ItemStack assemble(@NotNull WorkbenchContainer container, @NotNull RegistryAccess registryAccess) {
+    public @NotNull ItemStack assemble(@NotNull WorkbenchContainer container, @NotNull HolderLookup.Provider lookupProvider) {
         return getResult(container);
     }
 
@@ -137,42 +141,45 @@ public class WorkbenchVanillaCraftingRecipe extends AbstractWorkbenchRecipe {
     }
 
     public static class Serializer implements RecipeSerializer<WorkbenchVanillaCraftingRecipe> {
+        private static final ResourceLocation UNBOUND_ID =
+                ResourceLocation.fromNamespaceAndPath(SkillTreeMod.MOD_ID, "unbound_vanilla_crafting");
+        private static final MapCodec<WorkbenchVanillaCraftingRecipe> CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
+                WorkbenchRecipeCodecs.IngredientAmount.CODEC.listOf().fieldOf("additionalIngredients")
+                        .forGetter(recipe -> WorkbenchRecipeCodecs.toList(recipe.additionalIngredients)),
+                WorkbenchRecipeCodecs.IngredientAmount.CODEC.optionalFieldOf("base_ingredient")
+                        .forGetter(recipe -> Optional.ofNullable(recipe.baseIngredient)
+                                .map(pair -> new WorkbenchRecipeCodecs.IngredientAmount(pair.getLeft(), pair.getRight()))),
+                ItemStack.CODEC.fieldOf("result").forGetter(recipe -> recipe.result)
+        ).apply(instance, (ingredients, base, result) -> new WorkbenchVanillaCraftingRecipe(
+                UNBOUND_ID,
+                base.map(value -> Pair.of(value.ingredient(), value.amount())).orElse(null),
+                WorkbenchRecipeCodecs.toMap(ingredients),
+                result
+        )));
+        private static final StreamCodec<RegistryFriendlyByteBuf, WorkbenchVanillaCraftingRecipe> STREAM_CODEC =
+                StreamCodec.composite(
+                        WorkbenchRecipeCodecs.IngredientAmount.STREAM_CODEC.apply(ByteBufCodecs.list()),
+                        recipe -> WorkbenchRecipeCodecs.toList(recipe.additionalIngredients),
+                        ByteBufCodecs.optional(WorkbenchRecipeCodecs.IngredientAmount.STREAM_CODEC),
+                        recipe -> Optional.ofNullable(recipe.baseIngredient)
+                                .map(pair -> new WorkbenchRecipeCodecs.IngredientAmount(pair.getLeft(), pair.getRight())),
+                        ItemStack.STREAM_CODEC, recipe -> recipe.result,
+                        (ingredients, base, result) -> new WorkbenchVanillaCraftingRecipe(
+                                UNBOUND_ID,
+                                base.map(value -> Pair.of(value.ingredient(), value.amount())).orElse(null),
+                                WorkbenchRecipeCodecs.toMap(ingredients),
+                                result
+                        )
+                );
+
         @Override
-        public @NotNull WorkbenchVanillaCraftingRecipe fromJson(@NotNull ResourceLocation id, @NotNull JsonObject jsonObject) {
-            throw new UnsupportedOperationException("Attempted to load an invalid recipe type.");
+        public MapCodec<WorkbenchVanillaCraftingRecipe> codec() {
+            return CODEC;
         }
 
         @Override
-        public @Nullable WorkbenchVanillaCraftingRecipe fromNetwork(@NotNull ResourceLocation id, @NotNull FriendlyByteBuf buf) {
-            Map<Ingredient, Integer> ingredients = new HashMap<>();
-            int ingredientsCount = buf.readInt();
-            for (int i = 0; i < ingredientsCount; i++) {
-                ingredients.put(Ingredient.fromNetwork(buf), buf.readInt());
-            }
-            Pair<Ingredient, Integer> baseIngredient = null;
-            boolean hasBaseIngredient = buf.readBoolean();
-            if (hasBaseIngredient) {
-                baseIngredient = Pair.of(Ingredient.fromNetwork(buf), buf.readInt());
-            }
-            ItemStack result = buf.readItem();
-            return new WorkbenchVanillaCraftingRecipe(id, baseIngredient, ingredients, result);
-        }
-
-        @Override
-        public void toNetwork(@NotNull FriendlyByteBuf buf, @NotNull WorkbenchVanillaCraftingRecipe recipe) {
-            int ingredientsCount = recipe.getAdditionalIngredients().size();
-            buf.writeInt(ingredientsCount);
-            recipe.getAdditionalIngredients().forEach((ingredient, requiredAmount) -> {
-                ingredient.toNetwork(buf);
-                buf.writeInt(requiredAmount);
-            });
-            Pair<Ingredient, Integer> baseIngredient = recipe.baseIngredient;
-            buf.writeBoolean(baseIngredient != null);
-            if (baseIngredient != null) {
-                baseIngredient.getLeft().toNetwork(buf);
-                buf.writeInt(baseIngredient.getRight());
-            }
-            buf.writeItem(recipe.result);
+        public StreamCodec<RegistryFriendlyByteBuf, WorkbenchVanillaCraftingRecipe> streamCodec() {
+            return STREAM_CODEC;
         }
     }
 }

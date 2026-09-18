@@ -15,13 +15,13 @@ public class SkillRequirementSerializer implements JsonSerializer<SkillRequireme
         JsonObject jsonObj = (JsonObject) json;
         String type;
         if (!jsonObj.has("type")) {
-            ResourceLocation defaultRequirementType = PSTRegistries.SKILL_REQUIREMENTS.get().getKey(PSTSkillRequirements.STAT_VALUE.get());
+            ResourceLocation defaultRequirementType = PSTRegistries.SKILL_REQUIREMENTS.getKey(PSTSkillRequirements.STAT_VALUE.get());
             type = Objects.requireNonNull(defaultRequirementType).toString();
         } else {
             type = jsonObj.get("type").getAsString();
         }
         ResourceLocation serializerId = ResourceLocation.parse(type);
-        SkillRequirement.Serializer serializer = PSTRegistries.SKILL_REQUIREMENTS.get().getValue(serializerId);
+        SkillRequirement.Serializer serializer = PSTRegistries.SKILL_REQUIREMENTS.get(serializerId);
         Objects.requireNonNull(serializer, "Unknown skill requirement: " + serializerId);
         return serializer.deserialize(jsonObj);
     }
@@ -29,7 +29,7 @@ public class SkillRequirementSerializer implements JsonSerializer<SkillRequireme
     @Override
     public JsonElement serialize(SkillRequirement<?> src, Type typeOfSrc, JsonSerializationContext context) {
         JsonObject json = new JsonObject();
-        ResourceLocation serializerId = PSTRegistries.SKILL_REQUIREMENTS.get().getKey(src.getSerializer());
+        ResourceLocation serializerId = PSTRegistries.SKILL_REQUIREMENTS.getKey(src.getSerializer());
         Objects.requireNonNull(serializerId);
         json.addProperty("type", serializerId.toString());
         src.getSerializer().serialize(json, src);

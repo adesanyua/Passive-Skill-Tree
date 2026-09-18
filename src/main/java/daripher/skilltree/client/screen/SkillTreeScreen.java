@@ -12,7 +12,6 @@ import daripher.skilltree.skill.PassiveSkillTree;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.gui.screens.achievement.StatsUpdateListener;
 import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.network.chat.Component;
@@ -26,7 +25,7 @@ import javax.annotation.Nonnull;
 import java.util.Objects;
 import java.util.stream.Stream;
 
-public class SkillTreeScreen extends Screen implements StatsUpdateListener {
+public class SkillTreeScreen extends Screen {
     public static final int BACKGROUND_SIZE = 2048;
     private final PassiveSkillTree skillTree;
     private final SkillButtons skillButtons;
@@ -52,6 +51,7 @@ public class SkillTreeScreen extends Screen implements StatsUpdateListener {
             ClientPacketListener connection = getMinecraft().getConnection();
             Objects.requireNonNull(connection);
             connection.send(new ServerboundClientCommandPacket(ServerboundClientCommandPacket.Action.REQUEST_STATS));
+            statsUpdated = true;
         }
         clearWidgets();
         skillTreeWidgets.clearWidgets();
@@ -94,15 +94,44 @@ public class SkillTreeScreen extends Screen implements StatsUpdateListener {
     @Override
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         renderAnimation += partialTick;
-        renderBackground(graphics);
+
+        // 1. Сбрасываем цвета и включаем прозрачность
+        graphics.setColor(1.0F, 1.0F, 1.0F, 1.0F);
+        RenderSystem.enableBlend();
+        RenderSystem.defaultBlendFunc();
+
+        // 2. Фон дерева и сами навыки
+        renderTreeBackground(graphics);
         skillButtons.render(graphics, mouseX, mouseY, partialTick);
+
+        // 3. Виньетка по краям
         renderOverlay(graphics);
+
+        // 4. Элементы UI древа (поиск, очки навыков)
         skillTreeWidgets.render(graphics, mouseX, mouseY, partialTick);
+
+        // 5. Дополнительные виджеты экрана
+        graphics.setColor(1.0F, 1.0F, 1.0F, 1.0F);
+        RenderSystem.enableBlend();
+        // The two tree widget groups were already rendered in their own layers above.
+        renderables.stream()
+                .filter(widget -> widget != skillButtons && widget != skillTreeWidgets)
+                .forEach(widget -> widget.render(graphics, mouseX, mouseY, partialTick));
+
+        // 6. Всплывающие подсказки (Tooltip)
         float tooltipX = mouseX + (prevMouseX - mouseX) * partialTick;
         float tooltipY = mouseY + (prevMouseY - mouseY) * partialTick;
         skillButtons.renderTooltip(graphics, tooltipX, tooltipY);
+
         prevMouseX = mouseX;
         prevMouseY = mouseY;
+
+        // Восстанавливаем цвет в конце
+        graphics.setColor(1.0F, 1.0F, 1.0F, 1.0F);
+    }
+    @Override
+    public void renderBackground(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+        // Оставляем пустым! Это отключает стандартный тёмный блюр-фильтр Minecraft 1.21.1
     }
 
     @Override
@@ -146,13 +175,12 @@ public class SkillTreeScreen extends Screen implements StatsUpdateListener {
 
     private void renderOverlay(GuiGraphics graphics) {
         ResourceLocation texture = ResourceLocation.parse("skilltree:textures/screen/skill_tree_overlay.png");
+        graphics.setColor(1.0F, 1.0F, 1.0F, 1.0F);
         RenderSystem.enableBlend();
         graphics.blit(texture, 0, 0, 0, 0F, 0F, width, height, width, height);
-        RenderSystem.disableBlend();
     }
 
-    @Override
-    public void renderBackground(GuiGraphics graphics) {
+    private void renderTreeBackground(GuiGraphics graphics) {
         ResourceLocation texture = ResourceLocation.parse("skilltree:textures/screen/skill_tree_background.png");
         PoseStack poseStack = graphics.pose();
         poseStack.pushPose();
@@ -174,8 +202,8 @@ public class SkillTreeScreen extends Screen implements StatsUpdateListener {
     }
 
     @Override
-    public boolean mouseScrolled(double mouseX, double mouseY, double amount) {
-        return skillButtons.mouseScrolled(mouseX, mouseY, amount);
+    public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
+        return skillButtons.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
     }
 
     private @Nonnull LocalPlayer getLocalPlayer() {
@@ -186,9 +214,4 @@ public class SkillTreeScreen extends Screen implements StatsUpdateListener {
         skillTreeWidgets.updateSkillPoints(skillPoints);
     }
 
-    @Override
-    public void onStatsUpdated() {
-        statsUpdated = true;
-        init();
-    }
 }

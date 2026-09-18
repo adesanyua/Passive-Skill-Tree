@@ -18,10 +18,8 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.enchantment.EnchantmentHelper;
 
 import javax.annotation.Nonnull;
-import java.util.Map;
 import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
@@ -39,7 +37,7 @@ public class EnchantmentAmountFunction implements FloatFunction<EnchantmentAmoun
     }
 
     private int getEnchants(Stream<ItemStack> items) {
-        return items.map(EnchantmentHelper::getEnchantments).map(Map::size).reduce(Integer::sum).orElse(0);
+        return items.map(ItemStack::getEnchantments).mapToInt(enchantments -> enchantments.size()).sum();
     }
 
     @Override

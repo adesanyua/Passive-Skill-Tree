@@ -16,6 +16,7 @@ import daripher.skilltree.skill.bonus.predicate.effect.MobEffectTypePredicate;
 import daripher.skilltree.skill.bonus.predicate.living.LivingEntityPredicate;
 import daripher.skilltree.skill.bonus.predicate.living.NoneLivingEntityPredicate;
 import net.minecraft.ChatFormatting;
+import net.minecraft.core.Holder;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
@@ -44,7 +45,7 @@ public final class EffectDurationBonus implements SkillBonus<EffectDurationBonus
         this.target = target;
     }
 
-    public float getDurationModifier(MobEffect mobEffect, @Nullable Player effectSource, LivingEntity entity) {
+    public float getDurationModifier(Holder<MobEffect> mobEffect, @Nullable Player effectSource, LivingEntity entity) {
         if (!effectPredicate.test(mobEffect)) {
             return 0f;
         }
@@ -126,7 +127,7 @@ public final class EffectDurationBonus implements SkillBonus<EffectDurationBonus
         Component effectTypeDescription = effectPredicate.getTooltip("plural");
         String key = getDescriptionId() + "." + target.getName();
         MutableComponent tooltip = Component.translatable(key, effectTypeDescription);
-        tooltip = TooltipHelper.getSkillBonusTooltip(tooltip, duration, AttributeModifier.Operation.MULTIPLY_BASE);
+        tooltip = TooltipHelper.getSkillBonusTooltip(tooltip, duration, AttributeModifier.Operation.ADD_MULTIPLIED_BASE);
         tooltip = playerMultiplier.getTooltip(tooltip, target);
         tooltip = playerCondition.getTooltip(tooltip, target);
         tooltip = enemyMultiplier.getTooltip(tooltip, target);

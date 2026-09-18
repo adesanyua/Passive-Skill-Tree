@@ -2,27 +2,31 @@ package daripher.skilltree.event;
 
 import daripher.skilltree.SkillTreeMod;
 import daripher.skilltree.skill.bonus.predicate.item.EquipmentPredicate;
+import daripher.skilltree.util.PotionHelper;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.world.item.component.CustomData;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.alchemy.PotionUtils;
-import net.minecraftforge.event.entity.living.LivingAttackEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
+import net.neoforged.neoforge.event.entity.living.LivingIncomingDamageEvent;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.fml.common.Mod;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
-@Mod.EventBusSubscriber(modid = SkillTreeMod.MOD_ID)
+@EventBusSubscriber(modid = SkillTreeMod.MOD_ID)
 public class PoisonedWeaponEvents {
     public static final String WEAPON_EFFECTS_TAG_NAME = "poisoned_weapon_effects";
     public static final String POISON_USES_LEFT_TAG_NAME = "poisoned_weapon_uses_left";
 
     @SubscribeEvent
-    public static void applyPoisonedWeaponEffect(LivingAttackEvent event) {
+    public static void applyPoisonedWeaponEffect(LivingIncomingDamageEvent event) {
         if (!(event.getSource().getEntity() instanceof Player player)) {
             return;
         }
@@ -40,19 +44,20 @@ public class PoisonedWeaponEvents {
     }
 
     public static void setPoisonedWeaponEffects(ItemStack itemStack, ItemStack potionStack, int maxUses) {
-        List<MobEffectInstance> potionEffects = PotionUtils.getMobEffects(potionStack);
-        CompoundTag itemTag = itemStack.getOrCreateTag();
+        List<MobEffectInstance> potionEffects = PotionHelper.getEffects(potionStack);
         ListTag effectsTagList = new ListTag();
-        potionEffects.stream().map(effectInstance -> effectInstance.save(new CompoundTag())).forEach(effectsTagList::add);
-        itemTag.put(WEAPON_EFFECTS_TAG_NAME, effectsTagList);
-        itemTag.putInt(POISON_USES_LEFT_TAG_NAME, maxUses);
+        potionEffects.stream().map(MobEffectInstance::save).forEach(effectsTagList::add);
+        CustomData.update(DataComponents.CUSTOM_DATA, itemStack, itemTag -> {
+            itemTag.put(WEAPON_EFFECTS_TAG_NAME, effectsTagList);
+            itemTag.putInt(POISON_USES_LEFT_TAG_NAME, maxUses);
+        });
     }
 
     public static boolean hasPoison(ItemStack itemStack) {
-        if (!itemStack.hasTag()) {
+        if (!itemStack.has(DataComponents.CUSTOM_DATA)) {
             return false;
         }
-        CompoundTag itemTag = itemStack.getOrCreateTag();
+        CompoundTag itemTag = itemStack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY).copyTag();
         if (!itemTag.contains(WEAPON_EFFECTS_TAG_NAME, Tag.TAG_LIST)) {
             return false;
         }
@@ -68,7 +73,7 @@ public class PoisonedWeaponEvents {
     }
 
     public static int getPoisonUses(ItemStack itemStack) {
-        CompoundTag itemTag = itemStack.getOrCreateTag();
+        CompoundTag itemTag = itemStack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY).copyTag();
         return itemTag.getInt(POISON_USES_LEFT_TAG_NAME);
     }
 
@@ -76,10 +81,10 @@ public class PoisonedWeaponEvents {
         if (!hasPoison(itemStack)) {
             return List.of();
         }
-        CompoundTag itemTag = itemStack.getOrCreateTag();
+        CompoundTag itemTag = itemStack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY).copyTag();
         List<MobEffectInstance> effects = new ArrayList<>();
         ListTag effectsListTag = itemTag.getList(WEAPON_EFFECTS_TAG_NAME, Tag.TAG_COMPOUND);
-        effectsListTag.stream().map(CompoundTag.class::cast).map(MobEffectInstance::load).forEach(effects::add);
+        effectsListTag.stream().map(CompoundTag.class::cast).map(MobEffectInstance::load).filter(Objects::nonNull).forEach(effects::add);
         return effects;
     }
 
@@ -87,18 +92,19 @@ public class PoisonedWeaponEvents {
         if (!hasPoison(itemStack)) {
             return;
         }
-        CompoundTag itemTag = itemStack.getOrCreateTag();
         int usesLeft = getPoisonUses(itemStack) - 1;
         if (usesLeft == 0) {
             clearWeaponEffects(itemStack);
             return;
         }
-        itemTag.putInt(POISON_USES_LEFT_TAG_NAME, usesLeft);
+        CustomData.update(DataComponents.CUSTOM_DATA, itemStack,
+                itemTag -> itemTag.putInt(POISON_USES_LEFT_TAG_NAME, usesLeft));
     }
 
     private static void clearWeaponEffects(ItemStack itemStack) {
-        CompoundTag itemTag = itemStack.getOrCreateTag();
-        itemTag.remove(WEAPON_EFFECTS_TAG_NAME);
-        itemTag.remove(POISON_USES_LEFT_TAG_NAME);
+        CustomData.update(DataComponents.CUSTOM_DATA, itemStack, itemTag -> {
+            itemTag.remove(WEAPON_EFFECTS_TAG_NAME);
+            itemTag.remove(POISON_USES_LEFT_TAG_NAME);
+        });
     }
 }

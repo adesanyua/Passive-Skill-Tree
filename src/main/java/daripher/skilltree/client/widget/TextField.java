@@ -1,6 +1,7 @@
 package daripher.skilltree.client.widget;
 
 import daripher.skilltree.mixin.EditBoxAccessor;
+import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
@@ -90,7 +91,7 @@ public class TextField extends EditBox implements TickingWidget {
         Font font = minecraft.font;
         String visibleText = font.plainSubstrByWidth(getValue().substring(accessor.getDisplayPos()), getInnerWidth());
         boolean isTextSplitByCursor = cursorVisiblePosition >= 0 && cursorVisiblePosition <= visibleText.length();
-        boolean isCursorVisible = isFocused() && accessor.getFrame() / 6 % 2 == 0 && isTextSplitByCursor;
+        boolean isCursorVisible = isFocused() && (Util.getMillis() - accessor.getFocusedTime()) / 300L % 2L == 0L && isTextSplitByCursor;
         if (visibleText.isEmpty() && hint != null && !isFocused()) {
             visibleText = hint;
         }
@@ -153,7 +154,6 @@ public class TextField extends EditBox implements TickingWidget {
 
     @Override
     public void onWidgetTick() {
-        this.tick();
     }
 
     public TextField setFocused() {
