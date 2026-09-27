@@ -22,6 +22,9 @@
         return { type: 'skilltree:gained_experience', multiplier: amount, experience_source: 'mobs' }
     }
     function refund(chance) { return { type: 'skilltree:free_enchantment', chance: chance } }
+    function oreLoot(chance) {
+        return { type: 'skilltree:loot_duplication', chance: chance, multiplier: 1.0, loot_type: 'ore' }
+    }
     function durability(chance) {
         return {
             type: 'skilltree:item_durability_loss_avoidance', chance: chance,
@@ -118,6 +121,17 @@
     ;['mage', 'warrior', 'engineer'].forEach(branch => {
         ;[[1, 2], [1, 3], [2, 4], [3, 5], [4, 6], [5, 7]].forEach(pair => link(branch, pair[0], pair[1]))
     })
+
+    // Temporary test path for verifying extra drops from vanilla ore loot tables.
+    node('test_gems', 1, 0, DIST, 0, 'Ore Loot Test I', 'emerald', [oreLoot(0.25)])
+    node('test_gems', 2, 0, DIST + 70, 0, 'Ore Loot Test II', 'diamond', [oreLoot(0.50)])
+    node('test_gems', 3, 0, DIST + 140, 0, 'Ore Loot Test III', 'emerald_block', [oreLoot(1.0)])
+    skills.test_gems_1.isStartingPoint = false
+    skills.test_gems_1.tags = []
+    link('test_gems', 1, 2)
+    link('test_gems', 2, 3)
+    skills.engineer_1.directConnections.push('skilltree:test_gems_1')
+    skills.test_gems_1.directConnections.push('skilltree:engineer_1')
     // Write only after the entire tree has been built and attributes validated.
     Object.keys(skills).forEach(id => JsonIO.write('kubejs/data/skilltree/skills/' + id + '.json', skills[id]))
     ;['alchemist', 'cook', 'hunter', 'tree'].forEach(id => {
